@@ -1,6 +1,6 @@
 <script>
     import * as d3 from "d3";
-    
+
   
     let width = 450;
     let height = 450;
@@ -10,14 +10,24 @@
     let radius = Math.min(width, height) / 2 - margin;
   
     // Create dummy data
-    const data = { a: 9, b: 20, c: 30, d: 8, e: 12, f: 3, g: 7, h: 14 };
+    let { data = $bindable() } = $props();
+    // const data = { a: 9, b: 20, c: 30 };
+    let categories = Object.keys(data)
   
     // set the color scale
-    const color = d3
-      .scaleOrdinal()
-      .domain(["a", "b", "c", "d", "e", "f", "g", "h"])
-      .range(d3.schemeDark2);
-  
+    // You can find other color schemes here: https://d3js.org/d3-scale-chromatic/sequential
+    // For now I will make it random
+    const colorSchemes = [
+        d3.schemeBrBG,
+        d3.schemePRGn,
+        d3.schemeRdBu,
+        d3.schemeGreys,
+        d3.schemeBlues,
+        d3.schemePuBuGn
+    ]
+    const chosenScheme = colorSchemes[Math.floor(Math.random() * colorSchemes.length)]
+    const color = d3.scaleOrdinal(chosenScheme[categories.length]);
+
     // Compute the position of each group on the pie:
     const pie = d3
       .pie()
@@ -46,8 +56,8 @@
     style:height="auto"
   >
     <g class="chart-inner">
-      {#each data_ready as slice}
-        <path d={arc(slice)} fill={color(slice.data[1])} stroke="white" />
+      {#each data_ready as slice, i}
+        <path d={arc(slice)} fill={color(i)} stroke="white" />
       {/each}
     </g>
   </svg>
