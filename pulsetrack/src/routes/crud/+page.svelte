@@ -141,105 +141,7 @@
 		}
 	}
 
-	let devTimeData = liveQuery(() => db.devTimes.toArray());
 
-	let pulses = $state([
-		{
-			title: 'Dev time',
-			data: [
-				{
-					label: 'Time Spent',
-					value: 9,
-					color: '#262626'
-				},
-				{
-					label: 'Remaining Time',
-					value: 6,
-					color: '#a3a3a3'
-				}
-			]
-		},
-		{
-			title: 'Sleep time',
-			data: [
-				{
-					label: 'Time Spent',
-					value: 3,
-					color: '#3730a3'
-				},
-				{
-					label: 'Remaining Time',
-					value: 6,
-					color: '#a5b4fc'
-				}
-			]
-		},
-		{
-			title: 'Lang time',
-			data: [
-				{
-					label: 'Time Spent',
-					value: 3,
-					color: '#166534'
-				},
-				{
-					label: 'Remaining Time',
-					value: 1,
-					color: '#86efac'
-				}
-			]
-		},
-		{
-			title: 'Exercise time',
-			data: [
-				{
-					label: 'Time Spent',
-					value: 1,
-					color: '#9a3412'
-				},
-				{
-					label: 'Remaining Time',
-					value: 6,
-					color: '#fdba74'
-				}
-			]
-		},
-		{
-			title: 'ML time',
-			data: [
-				{
-					label: 'Time Spent',
-					value: 4,
-					color: '#175985'
-				},
-				{
-					label: 'Remaining Time',
-					value: 6,
-					color: '#7dd3fc'
-				}
-			]
-		}
-	]);
-
-	function increment(pulse: { data: any[] }): None {
-		pulse.data.forEach((element) => {
-			if (element['label'] == 'Time Spent') {
-				element['value'] = element['value'] + 1;
-			} else {
-				element['value'] = element['value'] - 1;
-			}
-		});
-	}
-
-	function decrement(pulse: { data: any[] }): None {
-		pulse.data.forEach((element) => {
-			if (element['label'] == 'Time Spent') {
-				element['value'] = element['value'] - 1;
-			} else {
-				element['value'] = element['value'] + 1;
-			}
-		});
-	}
 </script>
 
 <svelte:head>
@@ -247,41 +149,6 @@
 	<meta name="description" content="Pulses" />
 </svelte:head>
 
-<div class="w-full border-2 border-rose-400 p-1">
-	<h1>Current Pulses</h1>
-	<div class="flex w-full flex-row flex-wrap justify-around gap-10 border-2 border-purple-500 p-1">
-		{#each pulses as pulse}
-			<DonutChart
-				bind:data={pulse.data}
-				title={pulse.title}
-				onIncrement={() => increment(pulse)}
-				onDecrement={() => decrement(pulse)}
-			></DonutChart>
-		{/each}
-	</div>
-	<h1>Add data</h1>
-	<fieldset>
-		<legend>Add new friend</legend>
-		<label>
-			start time:
-			<input type="number" bind:value={startTime} />
-		</label>
-		<br />
-		<label>
-			Age:
-			<input type="number" bind:value={endTime} />
-		</label>
-		<br />
-		<button onclick={addDevTime}>Add time</button>
-	</fieldset>
-	<ul>
-		{#if $devTimeData}
-			{#each $devTimeData as devSession (devSession.id)}
-				<li>{devSession.start_time}, {devSession.end_time}</li>
-			{/each}
-		{/if}
-	</ul>
-</div>
 
 /// Claude code start:
 
