@@ -5,6 +5,7 @@ export interface Activity {
   name: string;
   goal: number;
   goal_scale: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  color: string;
   created_at: number;
 }
 
@@ -74,6 +75,13 @@ export const getActivities = async () => {
   return db.getAllFromIndex('activities', 'by-created_at');
 };
 
+export const updateActivity = async (id: number, activity: Partial<Omit<Activity, 'id' | 'created_at'>>) => {
+  const db = await getDB();
+  const existing = await db.get('activities', id);
+  if (!existing) throw new Error('Activity not found');
+  return db.put('activities', { ...existing, ...activity });
+};
+
 export const deleteActivity = async (id: number) => {
   const db = await getDB();
   // Remove activity from sessions first (Referential Integrity)
@@ -116,6 +124,11 @@ export const getSessionsByActivity = async (activityId: number) => {
     return sessions.sort((a, b) => b.start_time - a.start_time);
 }
 
+export const updateSession = async (id: number, session: Omit<Session, 'id'>) => {
+  const db = await getDB();
+  return db.put('sessions', { ...session, id });
+};
+
 export const deleteSession = async (id: number) => {
   const db = await getDB();
   return db.delete('sessions', id);
@@ -128,29 +141,157 @@ export const seedDB = async () => {
   if (activityCount > 0) return; // Already seeded
 
   // Default Activities
-  const sleepId = await db.add('activities', { name: 'Sleep', goal: 8, goal_scale: 'daily', created_at: Date.now() });
-  const gymId = await db.add('activities', { name: 'Gym', goal: 1, goal_scale: 'daily', created_at: Date.now() });
-  const socialId = await db.add('activities', { name: 'Socializing', goal: 10, goal_scale: 'weekly', created_at: Date.now() });
+  const sleepId = await db.add('activities', { name: 'Sleep', goal: 8, goal_scale: 'daily', color: '#3b82f6', created_at: Date.now() });
+  const gymId = await db.add('activities', { name: 'Gym', goal: 1, goal_scale: 'daily', color: '#6b7280', created_at: Date.now() });
+  const socialId = await db.add('activities', { name: 'Socializing', goal: 10, goal_scale: 'weekly', color: '#eab308', created_at: Date.now() });
 
-  // Default Sessions
-  // "Night's Rest" (8h) - yesterday night to this morning
-  const now = Date.now();
   const oneHour = 3600 * 1000;
-  
-  await db.add('sessions', {
-    name: "Night's Rest",
-    start_time: now - (8 * oneHour),
-    end_time: now,
-    activity_ids: [sleepId as number],
-  });
+  const now = Date.now();
+  const today = new Date(now);
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  const currentDay = today.getDate();
 
-  // "Evening Workout with Dave" (1.5h) - 2 days ago
-  await db.add('sessions', {
-    name: "Evening Workout with Dave",
-    start_time: now - (48 * oneHour),
-    end_time: now - (46.5 * oneHour),
-    activity_ids: [gymId as number, socialId as number],
-  });
+  // Helper to create session data
+  const createSessionData = (
+    dayOffset: number,
+    hour: number,
+    minute: number,
+    duration: number,
+    name: string,
+    activityIds: number[]
+  ) => ({ dayOffset, hour, minute, duration, name, activityIds });
+
+  // Mock data for a full month (30 days)
+  const mockSessions = [
+    // Day 0 (Today)
+    createSessionData(0, 23, 30, 6.5, "Last Night's Rest", [sleepId as number]),
+    
+    // Day 1
+    createSessionData(1, 23, 15, 7, "Night's Rest", [sleepId as number]),
+    createSessionData(1, 18, 0, 1.5, "Evening Workout with Dave", [gymId as number, socialId as number]),
+    
+    // Day 2
+    createSessionData(2, 22, 45, 6, "Night's Rest", [sleepId as number]),
+    createSessionData(2, 7, 0, 1.25, "Morning Gym Session", [gymId as number]),
+    
+    // Day 3
+    createSessionData(3, 23, 0, 7.5, "Night's Rest", [sleepId as number]),
+    
+    // Day 4
+    createSessionData(4, 22, 30, 5.5, "Night's Rest", [sleepId as number]),
+    createSessionData(4, 17, 30, 1.75, "Evening Gym Session", [gymId as number]),
+    
+    // Day 5
+    createSessionData(5, 23, 45, 6.75, "Night's Rest", [sleepId as number]),
+    createSessionData(5, 11, 0, 2.5, "Brunch with Friends", [socialId as number]),
+    
+    // Day 6 (Weekend)
+    createSessionData(6, 23, 0, 7, "Night's Rest", [sleepId as number]),
+    createSessionData(6, 8, 0, 1.5, "Morning Workout with Sarah", [gymId as number, socialId as number]),
+    createSessionData(6, 19, 30, 3, "Dinner Out", [socialId as number]),
+    
+    // Day 7
+    createSessionData(7, 22, 15, 6.25, "Night's Rest", [sleepId as number]),
+    
+    // Day 8
+    createSessionData(8, 23, 0, 7.5, "Night's Rest", [sleepId as number]),
+    createSessionData(8, 18, 15, 1.5, "Evening Gym Session", [gymId as number]),
+    
+    // Day 9
+    createSessionData(9, 22, 45, 5.75, "Night's Rest", [sleepId as number]),
+    createSessionData(9, 6, 30, 1.25, "Morning Gym Session", [gymId as number]),
+    
+    // Day 10
+    createSessionData(10, 23, 30, 6.5, "Night's Rest", [sleepId as number]),
+    
+    // Day 11
+    createSessionData(11, 22, 0, 7, "Night's Rest", [sleepId as number]),
+    createSessionData(11, 17, 45, 1.75, "Evening Workout with Mike", [gymId as number, socialId as number]),
+    
+    // Day 12
+    createSessionData(12, 23, 15, 6.25, "Night's Rest", [sleepId as number]),
+    
+    // Day 13 (Weekend)
+    createSessionData(13, 23, 45, 7.5, "Night's Rest", [sleepId as number]),
+    createSessionData(13, 10, 30, 2, "Coffee Meetup", [socialId as number]),
+    createSessionData(13, 16, 0, 2.5, "Hanging Out", [socialId as number]),
+    
+    // Day 14
+    createSessionData(14, 22, 30, 6, "Night's Rest", [sleepId as number]),
+    createSessionData(14, 7, 15, 1.5, "Morning Workout with Emma", [gymId as number, socialId as number]),
+    
+    // Day 15
+    createSessionData(15, 23, 0, 7.25, "Night's Rest", [sleepId as number]),
+    
+    // Day 16
+    createSessionData(16, 22, 45, 5.5, "Night's Rest", [sleepId as number]),
+    createSessionData(16, 18, 30, 1.5, "Evening Gym Session", [gymId as number]),
+    
+    // Day 17
+    createSessionData(17, 23, 30, 6.75, "Night's Rest", [sleepId as number]),
+    createSessionData(17, 6, 45, 1.25, "Morning Gym Session", [gymId as number]),
+    
+    // Day 18
+    createSessionData(18, 22, 15, 7, "Night's Rest", [sleepId as number]),
+    
+    // Day 19
+    createSessionData(19, 23, 0, 6.5, "Night's Rest", [sleepId as number]),
+    createSessionData(19, 17, 0, 1.75, "Evening Gym Session", [gymId as number]),
+    
+    // Day 20 (Weekend)
+    createSessionData(20, 23, 45, 7.5, "Night's Rest", [sleepId as number]),
+    createSessionData(20, 9, 0, 1.5, "Morning Workout with Alex", [gymId as number, socialId as number]),
+    createSessionData(20, 20, 0, 3.5, "Movie Night", [socialId as number]),
+    
+    // Day 21
+    createSessionData(21, 22, 30, 6.25, "Night's Rest", [sleepId as number]),
+    
+    // Day 22
+    createSessionData(22, 23, 15, 5.75, "Night's Rest", [sleepId as number]),
+    createSessionData(22, 18, 0, 1.5, "Evening Gym Session", [gymId as number]),
+    
+    // Day 23
+    createSessionData(23, 22, 45, 7, "Night's Rest", [sleepId as number]),
+    createSessionData(23, 7, 30, 1.25, "Morning Gym Session", [gymId as number]),
+    
+    // Day 24
+    createSessionData(24, 23, 0, 6.5, "Night's Rest", [sleepId as number]),
+    
+    // Day 25
+    createSessionData(25, 22, 15, 7.25, "Night's Rest", [sleepId as number]),
+    createSessionData(25, 17, 30, 1.75, "Evening Workout with Jordan", [gymId as number, socialId as number]),
+    
+    // Day 26 (Weekend)
+    createSessionData(26, 23, 30, 6, "Night's Rest", [sleepId as number]),
+    createSessionData(26, 11, 30, 2.5, "Brunch with Friends", [socialId as number]),
+    createSessionData(26, 15, 30, 3, "Hanging Out", [socialId as number]),
+    
+    // Day 27
+    createSessionData(27, 22, 45, 7, "Night's Rest", [sleepId as number]),
+    createSessionData(27, 6, 15, 1.5, "Morning Workout with Dave", [gymId as number, socialId as number]),
+    
+    // Day 28
+    createSessionData(28, 23, 0, 6.25, "Night's Rest", [sleepId as number]),
+    
+    // Day 29
+    createSessionData(29, 22, 30, 5.5, "Night's Rest", [sleepId as number]),
+    createSessionData(29, 18, 45, 1.5, "Evening Gym Session", [gymId as number]),
+  ];
+
+  // Add all sessions to database
+  for (const session of mockSessions) {
+    const sessionDate = new Date(currentYear, currentMonth - 1, currentDay - session.dayOffset, session.hour, session.minute);
+    const startTime = sessionDate.getTime();
+    const endTime = startTime + (session.duration * oneHour);
+    
+    await db.add('sessions', {
+      name: session.name,
+      start_time: startTime,
+      end_time: endTime,
+      activity_ids: session.activityIds,
+    });
+  }
 };
 
 export const resetDB = async () => {
@@ -161,4 +302,3 @@ export const resetDB = async () => {
   await tx.done;
   await seedDB();
 };
-

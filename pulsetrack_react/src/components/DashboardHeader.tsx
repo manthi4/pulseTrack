@@ -16,11 +16,11 @@ export function DashboardHeader({
   onDateChange
 }: DashboardHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
-      <h1 className="text-3xl font-bold tracking-tight">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
         {title}
       </h1>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 w-full sm:w-auto">
         <TimePeriodSelector 
           value={timePeriod} 
           selectedDate={selectedDate}

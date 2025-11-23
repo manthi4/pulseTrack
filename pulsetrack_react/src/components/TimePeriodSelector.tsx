@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { cn } from '../lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths } from 'date-fns';
 
 export type TimePeriod = 'day' | 'week' | 'month';
 
@@ -26,78 +26,68 @@ export const TimePeriodSelector: React.FC<TimePeriodSelectorProps> = ({
     { label: 'Month', value: 'month' },
   ];
 
+  const navigateFunctions = {
+    day: { prev: subDays, next: addDays },
+    week: { prev: subWeeks, next: addWeeks },
+    month: { prev: subMonths, next: addMonths },
+  };
+
   const navigatePeriod = (direction: 'prev' | 'next') => {
-    let newDate: Date;
-    if (direction === 'prev') {
-      switch (value) {
-        case 'day':
-          newDate = subDays(selectedDate, 1);
-          break;
-        case 'week':
-          newDate = subWeeks(selectedDate, 1);
-          break;
-        case 'month':
-          newDate = subMonths(selectedDate, 1);
-          break;
-        default:
-          newDate = selectedDate;
-      }
-    } else {
-      switch (value) {
-        case 'day':
-          newDate = addDays(selectedDate, 1);
-          break;
-        case 'week':
-          newDate = addWeeks(selectedDate, 1);
-          break;
-        case 'month':
-          newDate = addMonths(selectedDate, 1);
-          break;
-        default:
-          newDate = selectedDate;
-      }
+    const navFn = navigateFunctions[value]?.[direction];
+    if (navFn) {
+      onDateChange(navFn(selectedDate, 1));
     }
-    onDateChange(newDate);
   };
 
   const formatPeriodDisplay = (date: Date, period: TimePeriod): string => {
-    switch (period) {
-      case 'day':
-        return format(date, 'MMM d, yyyy');
-      case 'week':
-        const weekStart = startOfWeek(date, { weekStartsOn: 1 });
-        const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
-        return `Week of ${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
-      case 'month':
-        return format(date, 'MMMM yyyy');
-      default:
-        return format(date, 'MMM d, yyyy');
+    if (period === 'week') {
+      const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+      const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
+      return `Week of ${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
     }
+    const formats: Record<TimePeriod, string> = {
+      day: 'MMM d, yyyy',
+      month: 'MMMM yyyy',
+      week: 'MMM d, yyyy', // fallback
+    };
+    return format(date, formats[period] || formats.day);
   };
 
   const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputDate = e.target.value;
     if (inputDate) {
-      onDateChange(new Date(inputDate));
+      let parsedDate: Date;
+      if (value === 'month') {
+        // For month input, value is "yyyy-MM"
+        const [year, month] = inputDate.split('-').map(Number);
+        parsedDate = new Date(year, month - 1, 1);
+      } else {
+        // For date input, value is "yyyy-MM-dd"
+        const [year, month, day] = inputDate.split('-').map(Number);
+        parsedDate = new Date(year, month - 1, day);
+      }
+      onDateChange(parsedDate);
     }
   };
 
   const getDateInputValue = (date: Date, period: TimePeriod): string => {
-    switch (period) {
-      case 'day':
-        return format(date, 'yyyy-MM-dd');
-      case 'week':
-        return format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-      case 'month':
-        return format(startOfMonth(date), 'yyyy-MM');
-      default:
-        return format(date, 'yyyy-MM-dd');
-    }
+    const formats: Record<TimePeriod, (d: Date) => string> = {
+      day: (d) => format(d, 'yyyy-MM-dd'),
+      week: (d) => format(startOfWeek(d, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+      month: (d) => format(startOfMonth(d), 'yyyy-MM'),
+    };
+    return formats[period]?.(date) || formats.day(date);
+  };
+
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleDateDisplayClick = () => {
+    inputRef.current?.showPicker?.() || inputRef.current?.focus();
   };
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="inline-flex rounded-lg border border-input bg-background p-1">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+      <div className="inline-flex rounded-lg border border-input bg-background p-1 w-full sm:w-auto">
         {periods.map((period) => (
           <Button
             key={period.value}
@@ -105,7 +95,7 @@ export const TimePeriodSelector: React.FC<TimePeriodSelectorProps> = ({
             size="sm"
             onClick={() => onChange(period.value)}
             className={cn(
-              'px-4 py-1.5 text-sm font-medium transition-all',
+              'px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-all flex-1 sm:flex-initial',
               value === period.value
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'hover:bg-accent hover:text-accent-foreground'
@@ -116,22 +106,30 @@ export const TimePeriodSelector: React.FC<TimePeriodSelectorProps> = ({
         ))}
       </div>
       
-      <div className="flex items-center gap-2 border border-input rounded-lg bg-background px-2">
+      <div className="flex items-center gap-2 border border-input rounded-lg bg-background overflow-hidden w-full sm:w-auto">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigatePeriod('prev')}
-          className="h-8 w-8 p-0"
+          className="h-8 w-8 p-0 shrink-0"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
         
-        <div className="flex items-center gap-2">
+        <div 
+          className="relative flex-1 min-w-0 sm:min-w-[160px] h-8 flex items-center px-2 sm:px-3 cursor-pointer hover:bg-accent/50 transition-colors"
+          onClick={handleDateDisplayClick}
+        >
+          <span className="text-xs sm:text-sm select-none pointer-events-none truncate">
+            {formatPeriodDisplay(selectedDate, value)}
+          </span>
           <Input
+            ref={inputRef}
             type={value === 'month' ? 'month' : 'date'}
             value={getDateInputValue(selectedDate, value)}
             onChange={handleDateInputChange}
-            className="h-8 w-auto px-2 text-sm border-0 focus-visible:ring-0"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            style={{ fontSize: '16px' }}
           />
         </div>
         
@@ -139,7 +137,7 @@ export const TimePeriodSelector: React.FC<TimePeriodSelectorProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => navigatePeriod('next')}
-          className="h-8 w-8 p-0"
+          className="h-8 w-8 p-0 shrink-0"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>

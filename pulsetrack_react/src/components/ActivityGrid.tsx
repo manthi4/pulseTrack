@@ -31,7 +31,7 @@ export function ActivityGrid({
           className="rounded-xl border border-border/50 bg-card text-card-foreground shadow-lg p-4 relative group cursor-pointer hover:shadow-xl hover:shadow-primary/5 transition-all hover:border-primary/20"
           onClick={() => onSelectActivity(activity.id!)}
         >
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+            <div className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
                  <Button 
                     variant="ghost" 
                     size="icon" 

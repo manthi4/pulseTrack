@@ -3,8 +3,11 @@ import {
   getActivities, 
   getSessions, 
   createSession, 
+  updateSession,
   deleteSession, 
-  deleteActivity, 
+  createActivity,
+  deleteActivity,
+  updateActivity,
   seedDB, 
   resetDB,
   type Activity, 
@@ -19,19 +22,17 @@ export function useAppData() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const acts = await getActivities();
-      const sess = await getSessions();
+      let acts = await getActivities();
+      let sess = await getSessions();
       
       if (acts.length === 0) {
-         await seedDB();
-         const seededActs = await getActivities();
-         const seededSess = await getSessions();
-         setActivities(seededActs);
-         setSessions(seededSess);
-      } else {
-         setActivities(acts);
-         setSessions(sess);
+        await seedDB();
+        acts = await getActivities();
+        sess = await getSessions();
       }
+      
+      setActivities(acts);
+      setSessions(sess);
     } catch (error) {
       console.error("Failed to load data:", error);
     } finally {
@@ -43,35 +44,43 @@ export function useAppData() {
     loadData();
   }, [loadData]);
 
-  const addSession = async (session: Omit<Session, 'id'>) => {
-    await createSession(session);
+  // Helper to execute DB operation and reload data
+  const withReload = useCallback(async <T,>(operation: () => Promise<T>) => {
+    await operation();
     await loadData();
-  };
+  }, [loadData]);
 
-  const removeSession = async (id: number) => {
-    if (confirm('Delete this session?')) {
-      await deleteSession(id);
-      await loadData();
-    }
-  };
+  const addSession = useCallback((session: Omit<Session, 'id'>) => 
+    withReload(() => createSession(session)), [withReload]);
 
-  const removeActivity = async (id: number) => {
+  const editSession = useCallback((id: number, session: Omit<Session, 'id'>) => 
+    withReload(() => updateSession(id, session)), [withReload]);
+
+  const removeSession = useCallback(async (id: number) => {
+    await withReload(() => deleteSession(id));
+  }, [withReload]);
+
+  const addActivity = useCallback((activity: Omit<Activity, 'id' | 'created_at'>) => 
+    withReload(() => createActivity(activity)), [withReload]);
+
+  const editActivity = useCallback((id: number, activity: Partial<Omit<Activity, 'id' | 'created_at'>>) => 
+    withReload(() => updateActivity(id, activity)), [withReload]);
+
+  const removeActivity = useCallback(async (id: number) => {
     if (confirm('Are you sure you want to delete this activity? Associated sessions will not be deleted but will lose this tag.')) {
-      await deleteActivity(id);
-      await loadData();
-      return true; // success
-    }
-    return false;
-  };
-
-  const resetData = async () => {
-    if (confirm('This will delete all data and reset to default. Continue?')) {
-      await resetDB();
-      await loadData();
+      await withReload(() => deleteActivity(id));
       return true;
     }
     return false;
-  };
+  }, [withReload]);
+
+  const resetData = useCallback(async () => {
+    if (confirm('This will delete all data and reset to default. Continue?')) {
+      await withReload(() => resetDB());
+      return true;
+    }
+    return false;
+  }, [withReload]);
 
   return {
     activities,
@@ -79,9 +88,11 @@ export function useAppData() {
     loading,
     refreshData: loadData,
     addSession,
+    editSession,
     removeSession,
+    addActivity,
+    editActivity,
     removeActivity,
     resetData
   };
 }
-

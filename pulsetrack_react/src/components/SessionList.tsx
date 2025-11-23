@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { type Session, type Activity } from '../lib/db';
 import { format } from 'date-fns';
-import { Trash2, Clock, Plus } from 'lucide-react';
+import { Trash2, Clock, Plus, Edit, Copy } from 'lucide-react';
 import { Button } from './ui/Button';
 
 interface SessionListProps {
@@ -9,25 +9,32 @@ interface SessionListProps {
   activities: Activity[];
   onDeleteSession: (id: number) => void;
   onLogSession: () => void;
+  onEditSession: (session: Session) => void;
+  onDuplicateSession?: (session: Session) => void;
 }
+
+const formatDuration = (start: number, end: number) => {
+  const diff = end - start;
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  return `${hours}h ${minutes}m`;
+};
 
 export const SessionList: React.FC<SessionListProps> = ({ 
   sessions, 
   activities, 
   onDeleteSession,
-  onLogSession 
+  onLogSession,
+  onEditSession,
+  onDuplicateSession
 }) => {
-  
-  const getActivityName = (id: number) => {
-    return activities.find(a => a.id === id)?.name || 'Unknown';
-  };
+  const activityMap = useMemo(() => {
+    const map = new Map<number, Activity>();
+    activities.forEach(a => { if (a.id !== undefined) map.set(a.id, a); });
+    return map;
+  }, [activities]);
 
-  const formatDuration = (start: number, end: number) => {
-    const diff = end - start;
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}h ${minutes}m`;
-  };
+  const getActivity = (id: number) => activityMap.get(id);
 
   return (
     <div className="space-y-4">
@@ -47,11 +54,11 @@ export const SessionList: React.FC<SessionListProps> = ({
         )}
 
         {sessions.map((session) => (
-          <div key={session.id} className="flex items-center justify-between p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-            <div className="space-y-1">
-              <div className="font-semibold flex items-center gap-2">
-                {session.name}
-                <span className="text-xs font-normal text-muted-foreground flex items-center gap-1">
+          <div key={session.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg border bg-card text-card-foreground shadow-sm gap-3">
+            <div className="space-y-1 flex-1 min-w-0">
+              <div className="font-semibold flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                <span className="truncate">{session.name}</span>
+                <span className="text-xs font-normal text-muted-foreground flex items-center gap-1 shrink-0">
                    <Clock className="h-3 w-3" /> {formatDuration(session.start_time, session.end_time)}
                 </span>
               </div>
@@ -59,16 +66,38 @@ export const SessionList: React.FC<SessionListProps> = ({
                 {format(session.start_time, 'PP p')}
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
-                {session.activity_ids.map(id => (
-                  <span key={id} className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-primary/20 bg-primary/10 text-primary hover:bg-primary/20">
-                    {getActivityName(id)}
-                  </span>
-                ))}
+                {session.activity_ids.map(id => {
+                  const activity = getActivity(id);
+                  const color = activity?.color || '#3b82f6';
+                  return (
+                    <span 
+                      key={id} 
+                      className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:opacity-80"
+                      style={{
+                        borderColor: `${color}40`,
+                        backgroundColor: `${color}15`,
+                        color: color,
+                      }}
+                    >
+                      {activity?.name || 'Unknown'}
+                    </span>
+                  );
+                })}
               </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => session.id && onDeleteSession(session.id)}>
-              <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-            </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              {onDuplicateSession && (
+                <Button variant="ghost" size="icon" onClick={() => onDuplicateSession(session)} title="Duplicate session">
+                  <Copy className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" onClick={() => session.id && onEditSession(session)} title="Edit session">
+                <Edit className="h-4 w-4 text-muted-foreground hover:text-primary" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => session.id && onDeleteSession(session.id)} title="Delete session">
+                <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+              </Button>
+            </div>
           </div>
         ))}
       </div>
