@@ -2,6 +2,7 @@
 node_modules/
 .pnp
 .pnp.js
+.yarn/install-state.gz
 
 # Build outputs
 dist/
@@ -9,6 +10,8 @@ dist-ssr/
 build/
 .output/
 .svelte-kit/
+dev-dist/
+storybook-static/
 
 # Logs
 logs
@@ -18,6 +21,12 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
 # Environment variables
 .env
@@ -29,16 +38,53 @@ lerna-debug.log*
 !.env.example
 !.env.test
 
+# PWA / Service Worker
+sw.js
+workbox-*.js
+registerSW.js
+
+# Testing
+coverage/
+*.lcov
+.nyc_output/
+.jest/
+__tests__/coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# Vite
+.vite/
+vite.config.*.timestamp-*
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.turbo/
+
+# Package manager files
+.pnpm-store/
+.npm/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
 .idea/
 *.swp
 *.swo
 *~
-.DS_Store
-Thumbs.db
+*.sublime-project
+*.sublime-workspace
+.vscode-test/
 
 # OS files
 .DS_Store
@@ -48,38 +94,28 @@ Thumbs.db
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Testing
-coverage/
-*.lcov
-.nyc_output/
-
-# TypeScript
-*.tsbuildinfo
-
-# Cache
-.cache/
-.parcel-cache/
-.eslintcache
-.stylelintcache
-.vite/
+Desktop.ini
+$RECYCLE.BIN/
 
 # Temporary files
 *.tmp
 *.temp
 *.bak
-*.swp
-*~
+.temp/
 
-# Package manager files
-.pnpm-store/
+# Deployment
+.vercel/
+.netlify/
 
-# IDE
-*.sublime-project
-*.sublime-workspace
-.vscode-test/
+# Local development
+.local
+*.local
+
+# Documentation
+.docusaurus
+docs/.vuepress/dist
 
 # Misc
-*.local
-.cache
-.temp
+.history/
+*.tgz
+*.tar.gz

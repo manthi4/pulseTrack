@@ -9,6 +9,7 @@ import { CurrentSession } from './components/CurrentSession'
 import { Sessions } from './components/Sessions'
 import { useAppData } from './hooks/useAppData'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { clearAllData } from './lib/db'
 
 type Page = 'dashboard' | 'advanced' | 'trends' | 'settings' | 'currentSession' | 'sessions';
 
@@ -23,7 +24,8 @@ function App() {
     editActivity,
     removeActivity, 
     resetData,
-    refreshData
+    refreshData,
+    refreshDataWithoutSeed
   } = useAppData();
 
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
@@ -33,6 +35,12 @@ function App() {
     if (await resetData()) {
       setSelectedActivityId(null);
     }
+  };
+
+  const handleDeleteAllData = async () => {
+    await clearAllData();
+    await refreshDataWithoutSeed();
+    setSelectedActivityId(null);
   };
   
   const handlePageChange = (page: Page) => {
@@ -50,6 +58,9 @@ function App() {
             onSelectActivity={setSelectedActivityId}
             selectedActivityId={selectedActivityId}
             onReset={handleReset}
+            activities={activities}
+            sessions={sessions}
+            onDeleteAllData={handleDeleteAllData}
           />
         }
       >

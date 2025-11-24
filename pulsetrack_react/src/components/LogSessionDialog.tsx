@@ -8,7 +8,7 @@ import { X } from 'lucide-react';
 interface LogSessionDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (session: Omit<Session, 'id'>) => void;
+  onSave: (session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => void;
   activities: Activity[];
   initialActivityId?: number | null;
   editingSession?: Session | null;
@@ -78,7 +78,7 @@ export const LogSessionDialog: React.FC<LogSessionDialogProps> = ({
   };
 
   const toggleActivity = (id: number) => {
-    setSelectedActivityIds(prev => 
+    setSelectedActivityIds(prev =>
       prev.includes(id) ? prev.filter(aid => aid !== id) : [...prev, id]
     );
   };
@@ -102,18 +102,18 @@ export const LogSessionDialog: React.FC<LogSessionDialogProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">Start Time</label>
-              <Input 
-                type="datetime-local" 
-                value={startTime} 
-                onChange={(e) => setStartTime(e.target.value)} 
+              <Input
+                type="datetime-local"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
               />
             </div>
             <div>
               <label className="text-sm font-medium">End Time</label>
-              <Input 
-                type="datetime-local" 
-                value={endTime} 
-                onChange={(e) => setEndTime(e.target.value)} 
+              <Input
+                type="datetime-local"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
               />
             </div>
           </div>
@@ -128,11 +128,10 @@ export const LogSessionDialog: React.FC<LogSessionDialogProps> = ({
                   <button
                     key={activity.id}
                     onClick={() => activity.id && toggleActivity(activity.id)}
-                    className={`px-3 py-1 rounded-full text-sm border transition-all ${
-                      isSelected
+                    className={`px-3 py-1 rounded-full text-sm border transition-all ${isSelected
                         ? 'shadow-md'
                         : 'hover:opacity-80'
-                    }`}
+                      }`}
                     style={{
                       backgroundColor: isSelected ? color : `${color}15`,
                       borderColor: isSelected ? color : `${color}40`,

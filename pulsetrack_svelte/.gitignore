@@ -2,6 +2,7 @@
 node_modules/
 .pnp
 .pnp.js
+.yarn/install-state.gz
 
 # SvelteKit
 .svelte-kit/
@@ -31,27 +32,32 @@ lerna-debug.log*
 # TypeScript
 *.tsbuildinfo
 
+# Svelte
+.svelte/
+
 # Testing
 coverage/
 *.lcov
 .nyc_output/
+.jest/
 
 # Cache
 .cache/
 .parcel-cache/
 .eslintcache
 .stylelintcache
+.turbo/
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
 .idea/
 *.swp
 *.swo
 *~
-.DS_Store
-Thumbs.db
 
 # OS files
 .DS_Store
@@ -61,11 +67,17 @@ Thumbs.db
 .Trashes
 ehthumbs.db
 Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
 # Deployment
 .vercel/
+.netlify/
 
 # Temporary files
 *.tmp
 *.temp
 *.bak
+
+# Local development
+*.local

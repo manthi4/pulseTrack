@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Pause, CheckCircle, RotateCcw, Clock, Timer } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { Select } from './ui/Select';
+// import { Select } from './ui/Select';
 import { LogSessionDialog } from './LogSessionDialog';
 import { type Activity } from '../lib/db';
 
 interface CurrentSessionProps {
   activities: Activity[];
-  onAddSession: (session: Omit<import('../lib/db').Session, 'id'>) => void;
+  onAddSession: (session: Omit<import('../lib/db').Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => Promise<void>;
 }
 
 type TimerType = 'countdown' | 'stopwatch';
@@ -20,19 +20,19 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
   const [timerType, setTimerType] = useState<TimerType>('stopwatch');
   const [selectedActivityIds, setSelectedActivityIds] = useState<number[]>([]);
   const [sessionName, setSessionName] = useState('');
-  
+
   // Countdown timer state
   const [countdownHours, setCountdownHours] = useState(0);
   const [countdownMinutes, setCountdownMinutes] = useState(0);
   const [countdownSeconds, setCountdownSeconds] = useState(0);
-  
+
   // Timer state
   const [isRunning, setIsRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0); // in milliseconds
   const [remainingTime, setRemainingTime] = useState(0); // in milliseconds for countdown
-  const [startTime, setStartTime] = useState<number | null>(null);
+  // const [startTime, setStartTime] = useState<number | null>(null);
   const intervalRef = useRef<number | null>(null);
-  
+
   // Dialog state
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
@@ -89,10 +89,10 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
   const showTimerNotification = () => {
     if ('Notification' in window && Notification.permission === 'granted') {
       const notificationTitle = 'Timer Complete!';
-      const notificationBody = sessionName 
+      const notificationBody = sessionName
         ? `Your session "${sessionName}" timer has finished.`
         : 'Your timer has finished.';
-      
+
       new Notification(notificationTitle, {
         body: notificationBody,
         icon: '/vite.svg', // You can replace this with a custom icon
@@ -108,7 +108,7 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
     // Play sound and show notification
     playTimerSound();
     showTimerNotification();
-    
+
     if (sessionStartTime) {
       setShowSaveDialog(true);
     }
@@ -199,7 +199,7 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
     setSessionStartTime(null);
   };
 
-  const handleSaveSession = (session: Omit<import('../lib/db').Session, 'id'>) => {
+  const handleSaveSession = (session: Omit<import('../lib/db').Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => {
     onAddSession(session);
     setShowSaveDialog(false);
     handleReset();
@@ -261,11 +261,10 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
                     key={activity.id}
                     onClick={() => activity.id && !isRunning && toggleActivity(activity.id)}
                     disabled={isRunning}
-                    className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
-                      isSelected
-                        ? 'shadow-md'
-                        : 'hover:opacity-80'
-                    } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`px-3 py-1.5 rounded-full text-sm border transition-all ${isSelected
+                      ? 'shadow-md'
+                      : 'hover:opacity-80'
+                      } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     style={{
                       backgroundColor: isSelected ? color : `${color}15`,
                       borderColor: isSelected ? color : `${color}40`,
@@ -287,11 +286,10 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
             <button
               onClick={() => !isRunning && setTimerType('stopwatch')}
               disabled={isRunning}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md border transition-all ${
-                timerType === 'stopwatch'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card border-border hover:bg-accent'
-              } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md border transition-all ${timerType === 'stopwatch'
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-card border-border hover:bg-accent'
+                } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <Clock className="h-4 w-4" />
               Stopwatch
@@ -299,11 +297,10 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
             <button
               onClick={() => !isRunning && setTimerType('countdown')}
               disabled={isRunning}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md border transition-all ${
-                timerType === 'countdown'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card border-border hover:bg-accent'
-              } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md border transition-all ${timerType === 'countdown'
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-card border-border hover:bg-accent'
+                } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <Timer className="h-4 w-4" />
               Countdown
@@ -356,11 +353,10 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
         {/* Timer Display */}
         <div className="mb-8">
           <div className="bg-card border border-border rounded-lg p-8 sm:p-12 text-center">
-            <div className={`text-6xl sm:text-7xl md:text-8xl font-mono font-bold mb-4 ${
-              timerType === 'countdown' && remainingTime <= 60000 && remainingTime > 0
-                ? 'text-destructive animate-pulse'
-                : 'text-primary'
-            }`}>
+            <div className={`text-6xl sm:text-7xl md:text-8xl font-mono font-bold mb-4 ${timerType === 'countdown' && remainingTime <= 60000 && remainingTime > 0
+              ? 'text-destructive animate-pulse'
+              : 'text-primary'
+              }`}>
               {formatTime(displayTime)}
             </div>
             {timerType === 'countdown' && remainingTime <= 0 && !isRunning && (
@@ -392,7 +388,7 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
               Pause
             </Button>
           )}
-          
+
           <Button
             onClick={handleFinish}
             size="lg"
@@ -403,7 +399,7 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
             <CheckCircle className="h-5 w-5 mr-2" />
             Finish
           </Button>
-          
+
           <Button
             onClick={handleReset}
             size="lg"

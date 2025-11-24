@@ -18,14 +18,14 @@ interface DashboardProps {
   sessions: Session[];
   selectedActivityId: number | null;
   onSelectActivity: (id: number | null) => void;
-  
+
   // Data Operations
   onAddActivity: (activity: Omit<Activity, 'id' | 'created_at'>) => Promise<void>;
   onEditActivity: (id: number, activity: Partial<Omit<Activity, 'id' | 'created_at'>>) => Promise<void>;
   onDeleteActivity: (id: number) => Promise<boolean>;
-  
-  onAddSession: (session: Omit<Session, 'id'>) => Promise<void>;
-  onEditSession: (id: number, session: Omit<Session, 'id'>) => Promise<void>;
+
+  onAddSession: (session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => Promise<void>;
+  onEditSession: (id: number, session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => Promise<void>;
   onDeleteSession: (id: number) => Promise<void>;
 }
 
@@ -63,7 +63,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const periodStartTime = start.getTime();
     const periodEndTime = end.getTime();
 
-    return (selectedActivityId 
+    return (selectedActivityId
       ? sessions.filter(s => s.activity_ids.includes(selectedActivityId))
       : sessions
     ).filter(s => {
@@ -94,14 +94,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleActivitySave = async (activityData: Partial<Activity>) => {
-    editingActivity?.id 
+    editingActivity?.id
       ? await onEditActivity(editingActivity.id, activityData)
       : await onAddActivity(activityData as any);
     closeActivityDialog();
   };
 
-  const handleSessionSave = async (session: Omit<Session, 'id'>) => {
-    editingSession?.id 
+  const handleSessionSave = async (session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => {
+    editingSession?.id
       ? await onEditSession(editingSession.id, session)
       : await onAddSession(session);
     closeSessionDialog();
@@ -117,7 +117,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const handleDuplicateSession = async (session: Session) => {
     const duration = session.end_time - session.start_time;
     const now = Date.now();
-    const duplicatedSession: Omit<Session, 'id'> = {
+    const duplicatedSession: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'> = {
       name: `${session.name} (Copy)`,
       start_time: now,
       end_time: now + duration,
@@ -139,68 +139,68 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Visualization Section */}
         {selectedActivity ? (
-           <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-4 h-4 rounded-full" 
-                    style={{ backgroundColor: selectedActivity.color || '#3b82f6' }}
-                  />
-                  <h2 className="text-xl sm:text-2xl font-semibold">{selectedActivity.name}</h2>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => openActivityDialog(selectedActivity)}
-                  className="w-full sm:w-auto"
-                >
-                  Edit Activity
-                </Button>
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-4 h-4 rounded-full"
+                  style={{ backgroundColor: selectedActivity.color || '#3b82f6' }}
+                />
+                <h2 className="text-xl sm:text-2xl font-semibold">{selectedActivity.name}</h2>
               </div>
+              <Button
+                variant="outline"
+                onClick={() => openActivityDialog(selectedActivity)}
+                className="w-full sm:w-auto"
+              >
+                Edit Activity
+              </Button>
+            </div>
+            <div className="rounded-xl border border-border/50 bg-card text-card-foreground shadow-lg p-6">
+              <h3 className="font-semibold leading-none tracking-tight mb-4">Progress</h3>
+              <ProgressBar
+                activity={selectedActivity}
+                sessions={sessions}
+                timePeriod={timePeriod}
+                selectedDate={selectedDate}
+                showPeriodLabel={true}
+              />
+            </div>
+
+            {/* Streak Display */}
+            {streak && (
               <div className="rounded-xl border border-border/50 bg-card text-card-foreground shadow-lg p-6">
-                 <h3 className="font-semibold leading-none tracking-tight mb-4">Progress</h3>
-                 <ProgressBar 
-                   activity={selectedActivity} 
-                   sessions={sessions} 
-                   timePeriod={timePeriod} 
-                   selectedDate={selectedDate}
-                   showPeriodLabel={true} 
-                 />
-              </div>
-              
-              {/* Streak Display */}
-              {streak && (
-                <div className="rounded-xl border border-border/50 bg-card text-card-foreground shadow-lg p-6">
-                  <h3 className="font-semibold leading-none tracking-tight mb-4 flex items-center gap-2">
-                    <Flame className="h-5 w-5 text-orange-500" />
-                    Streaks
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Current Streak</p>
-                      <p className="text-2xl font-bold" style={{ color: selectedActivity.color }}>
-                        {streak.current} {streak.current === 1 ? 'day' : 'days'}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Longest Streak</p>
-                      <p className="text-2xl font-bold" style={{ color: selectedActivity.color }}>
-                        {streak.longest} {streak.longest === 1 ? 'day' : 'days'}
-                      </p>
-                    </div>
+                <h3 className="font-semibold leading-none tracking-tight mb-4 flex items-center gap-2">
+                  <Flame className="h-5 w-5 text-orange-500" />
+                  Streaks
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Current Streak</p>
+                    <p className="text-2xl font-bold" style={{ color: selectedActivity.color }}>
+                      {streak.current} {streak.current === 1 ? 'day' : 'days'}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Longest Streak</p>
+                    <p className="text-2xl font-bold" style={{ color: selectedActivity.color }}>
+                      {streak.longest} {streak.longest === 1 ? 'day' : 'days'}
+                    </p>
                   </div>
                 </div>
-              )}
-              <div>
-                <TrendChart 
-                  activities={activities}
-                  sessions={sessions}
-                  selectedActivityId={selectedActivity.id}
-                  title="Activity Trend"
-                />
               </div>
-           </div>
+            )}
+            <div>
+              <TrendChart
+                activities={activities}
+                sessions={sessions}
+                selectedActivityId={selectedActivity.id}
+                title="Activity Trend"
+              />
+            </div>
+          </div>
         ) : (
-          <ActivityGrid 
+          <ActivityGrid
             activities={activities}
             sessions={sessions}
             timePeriod={timePeriod}
@@ -213,15 +213,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Sessions List Section */}
         <div className="pt-8 border-t">
-           <h2 className="text-xl font-bold mb-4">Sessions</h2>
-           <SessionList 
-             sessions={displayedSessions} 
-             activities={activities} 
-             onDeleteSession={onDeleteSession}
-             onLogSession={() => openSessionDialog()}
-             onEditSession={openSessionDialog}
-             onDuplicateSession={handleDuplicateSession}
-           />
+          <h2 className="text-xl font-bold mb-4">Sessions</h2>
+          <SessionList
+            sessions={displayedSessions}
+            activities={activities}
+            onDeleteSession={onDeleteSession}
+            onLogSession={() => openSessionDialog()}
+            onEditSession={openSessionDialog}
+            onDuplicateSession={handleDuplicateSession}
+          />
         </div>
       </div>
 

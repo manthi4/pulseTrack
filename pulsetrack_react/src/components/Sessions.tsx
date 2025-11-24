@@ -12,8 +12,8 @@ interface SessionsProps {
   sessions: Session[];
   activities: Activity[];
   onDeleteSession: (id: number) => void;
-  onEditSession: (id: number, session: Omit<Session, 'id'>) => Promise<void>;
-  onAddSession: (session: Omit<Session, 'id'>) => Promise<void>;
+  onEditSession: (id: number, session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => Promise<void>;
+  onAddSession: (session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => Promise<void>;
 }
 
 const ITEMS_PER_PAGE = 30;
@@ -56,14 +56,14 @@ export const Sessions: React.FC<SessionsProps> = ({
     // Search by name
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(s => 
+      filtered = filtered.filter(s =>
         s.name.toLowerCase().includes(query)
       );
     }
 
     // Filter by activity
     if (selectedActivityId !== null) {
-      filtered = filtered.filter(s => 
+      filtered = filtered.filter(s =>
         s.activity_ids.includes(selectedActivityId)
       );
     }
@@ -118,7 +118,7 @@ export const Sessions: React.FC<SessionsProps> = ({
 
   const handleBulkDelete = () => {
     if (selectedSessionIds.size === 0) return;
-    
+
     selectedSessionIds.forEach(id => {
       onDeleteSession(id);
     });
@@ -135,7 +135,7 @@ export const Sessions: React.FC<SessionsProps> = ({
     setIsLogSessionOpen(true);
   };
 
-  const handleSaveSession = async (session: Omit<Session, 'id'>) => {
+  const handleSaveSession = async (session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => {
     if (editingSession?.id) {
       await onEditSession(editingSession.id, session);
     } else {
@@ -148,7 +148,7 @@ export const Sessions: React.FC<SessionsProps> = ({
   const handleDuplicateSession = async (session: Session) => {
     const duration = session.end_time - session.start_time;
     const now = Date.now();
-    const duplicatedSession: Omit<Session, 'id'> = {
+    const duplicatedSession: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'> = {
       name: `${session.name} (Copy)`,
       start_time: now,
       end_time: now + duration,

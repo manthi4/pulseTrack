@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
 export type ThemeMode = 'light' | 'dark';
 export type FontFamily = 'system' | 'inter' | 'roboto' | 'open-sans' | 'lato' | 'montserrat';
@@ -117,7 +117,7 @@ export function useTheme() {
 function hexToHsl(hex: string): { h: number; s: number; l: number } | null {
   // Remove # if present
   hex = hex.replace('#', '');
-  
+
   // Parse RGB
   const r = parseInt(hex.substring(0, 2), 16) / 255;
   const g = parseInt(hex.substring(2, 4), 16) / 255;
@@ -132,7 +132,7 @@ function hexToHsl(hex: string): { h: number; s: number; l: number } | null {
   if (max !== min) {
     const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    
+
     switch (max) {
       case r:
         h = ((g - b) / d + (g < b ? 6 : 0)) / 6;

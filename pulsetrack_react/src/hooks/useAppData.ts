@@ -19,13 +19,13 @@ export function useAppData() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (skipSeed = false) => {
     try {
       setLoading(true);
       let acts = await getActivities();
       let sess = await getSessions();
       
-      if (acts.length === 0) {
+      if (acts.length === 0 && !skipSeed) {
         await seedDB();
         acts = await getActivities();
         sess = await getSessions();
@@ -50,10 +50,10 @@ export function useAppData() {
     await loadData();
   }, [loadData]);
 
-  const addSession = useCallback((session: Omit<Session, 'id'>) => 
+  const addSession = useCallback((session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => 
     withReload(() => createSession(session)), [withReload]);
 
-  const editSession = useCallback((id: number, session: Omit<Session, 'id'>) => 
+  const editSession = useCallback((id: number, session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => 
     withReload(() => updateSession(id, session)), [withReload]);
 
   const removeSession = useCallback(async (id: number) => {
@@ -82,11 +82,20 @@ export function useAppData() {
     return false;
   }, [withReload]);
 
+  const refreshData = useCallback(async () => {
+    await loadData(false);
+  }, [loadData]);
+
+  const refreshDataWithoutSeed = useCallback(async () => {
+    await loadData(true);
+  }, [loadData]);
+
   return {
     activities,
     sessions,
     loading,
-    refreshData: loadData,
+    refreshData,
+    refreshDataWithoutSeed,
     addSession,
     editSession,
     removeSession,
