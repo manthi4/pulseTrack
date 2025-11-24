@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resize Icon for PWA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+            display: block;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .instructions {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .icon-container {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>PWA Icon Resizer</h1>
+    <div class="instructions">
+        <p><strong>Instructions:</strong></p>
+        <ol>
+            <li>Select your icon file (icon1.png)</li>
+            <li>Click "Generate PWA Icons"</li>
+            <li>Right-click each canvas and "Save image as..."</li>
+            <li>Save as <code>pwa-192x192.png</code> and <code>pwa-512x512.png</code> in the <code>public</code> folder</li>
+        </ol>
+    </div>
+    
+    <input type="file" id="fileInput" accept="image/*" />
+    <button onclick="generateIcons()">Generate PWA Icons</button>
+    
+    <div class="icon-container">
+        <h2>192x192 Icon</h2>
+        <canvas id="icon192" width="192" height="192"></canvas>
+        <button onclick="downloadIcon(192)">Download 192x192</button>
+    </div>
+    
+    <div class="icon-container">
+        <h2>512x512 Icon</h2>
+        <canvas id="icon512" width="512" height="512"></canvas>
+        <button onclick="downloadIcon(512)">Download 512x512</button>
+    </div>
+    
+    <script>
+        let sourceImage = null;
+        
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        sourceImage = img;
+                        generateIcons();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Try to load icon1.png automatically
+        window.onload = function() {
+            const img = new Image();
+            img.onload = function() {
+                sourceImage = img;
+                generateIcons();
+            };
+            img.onerror = function() {
+                console.log('icon1.png not found, please select an image file');
+            };
+            img.src = './icon1.png';
+        };
+        
+        function generateIcons() {
+            if (!sourceImage) {
+                alert('Please select an image file first');
+                return;
+            }
+            
+            const sizes = [192, 512];
+            sizes.forEach(size => {
+                const canvas = document.getElementById(`icon${size}`);
+                const ctx = canvas.getContext('2d');
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, size, size);
+                
+                // Draw image centered and scaled to fit
+                const scale = Math.min(size / sourceImage.width, size / sourceImage.height);
+                const scaledWidth = sourceImage.width * scale;
+                const scaledHeight = sourceImage.height * scale;
+                const x = (size - scaledWidth) / 2;
+                const y = (size - scaledHeight) / 2;
+                
+                ctx.drawImage(sourceImage, x, y, scaledWidth, scaledHeight);
+            });
+        }
+        
+        function downloadIcon(size) {
+            const canvas = document.getElementById(`icon${size}`);
+            const link = document.createElement('a');
+            link.download = `pwa-${size}x${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
+
