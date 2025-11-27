@@ -1,4 +1,4 @@
-import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
+import Dexie, { type EntityTable } from 'dexie';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface Activity {
@@ -24,73 +24,37 @@ export interface Session {
   deleted_at: number | null;
 }
 
-export interface PulseTrackDB extends DBSchema {
-  activities: {
-    key: number;
-    value: Activity;
-    indexes: { 'by-name': string; 'by-created_at': number; 'by-sync_id': string };
-  };
-  sessions: {
-    key: number;
-    value: Session;
-    indexes: { 'by-start_time': number; 'by-end_time': number; 'by-activity_ids': number; 'by-sync_id': string };
-  };
-}
+class PulseTrackDatabase extends Dexie {
+  activities!: EntityTable<Activity, 'id'>;
+  sessions!: EntityTable<Session, 'id'>;
 
-const DB_NAME = 'pulsetrack-db';
-const DB_VERSION = 2; // Incremented version
+  constructor() {
+    super('pulsetrack-db');
+    
+    // Version 1: Initial schema
+    this.version(1).stores({
+      activities: '++id, name, created_at',
+      sessions: '++id, start_time, end_time, *activity_ids'
+    });
 
-let dbPromise: Promise<IDBPDatabase<PulseTrackDB>>;
-
-export const getDB = () => {
-  if (!dbPromise) {
-    dbPromise = openDB<PulseTrackDB>(DB_NAME, DB_VERSION, {
-      upgrade(db, oldVersion, _newVersion, transaction) {
-        let activityStore;
-        if (oldVersion < 1) {
-          activityStore = db.createObjectStore('activities', {
-            keyPath: 'id',
-            autoIncrement: true,
-          });
-          activityStore.createIndex('by-name', 'name');
-          activityStore.createIndex('by-created_at', 'created_at');
-        } else {
-          activityStore = transaction.objectStore('activities');
-        }
-
-        if (!activityStore.indexNames.contains('by-sync_id')) {
-          activityStore.createIndex('by-sync_id', 'sync_id');
-        }
-
-        let sessionStore;
-        if (oldVersion < 1) {
-          sessionStore = db.createObjectStore('sessions', {
-            keyPath: 'id',
-            autoIncrement: true,
-          });
-          sessionStore.createIndex('by-start_time', 'start_time');
-          sessionStore.createIndex('by-end_time', 'end_time');
-          sessionStore.createIndex('by-activity_ids', 'activity_ids', { multiEntry: true });
-        } else {
-          sessionStore = transaction.objectStore('sessions');
-        }
-
-        if (!sessionStore.indexNames.contains('by-sync_id')) {
-          sessionStore.createIndex('by-sync_id', 'sync_id');
-        }
-      },
+    // Version 2: Add sync_id indexes
+    this.version(2).stores({
+      activities: '++id, name, created_at, sync_id',
+      sessions: '++id, start_time, end_time, *activity_ids, sync_id'
     });
   }
-  return dbPromise;
-};
+}
+
+const db = new PulseTrackDatabase();
+
+export const getDB = () => db;
 
 // CRUD Operations
 
 // Activities
 export const createActivity = async (activity: Omit<Activity, 'id' | 'created_at' | 'sync_id' | 'updated_at' | 'deleted_at'>) => {
-  const db = await getDB();
   const now = Date.now();
-  return db.add('activities', {
+  return db.activities.add({
     ...activity,
     sync_id: uuidv4(),
     created_at: now,
@@ -100,17 +64,15 @@ export const createActivity = async (activity: Omit<Activity, 'id' | 'created_at
 };
 
 export const getActivities = async (includeDeleted = false) => {
-  const db = await getDB();
-  const activities = await db.getAllFromIndex('activities', 'by-created_at');
+  const activities = await db.activities.orderBy('created_at').toArray();
   if (includeDeleted) return activities;
   return activities.filter(a => a.deleted_at === null);
 };
 
 export const updateActivity = async (id: number, activity: Partial<Omit<Activity, 'id' | 'created_at'>>) => {
-  const db = await getDB();
-  const existing = await db.get('activities', id);
+  const existing = await db.activities.get(id);
   if (!existing) throw new Error('Activity not found');
-  return db.put('activities', {
+  return db.activities.put({
     ...existing,
     ...activity,
     updated_at: Date.now()
@@ -118,42 +80,65 @@ export const updateActivity = async (id: number, activity: Partial<Omit<Activity
 };
 
 export const deleteActivity = async (id: number) => {
-  const db = await getDB();
-  const existing = await db.get('activities', id);
+  const existing = await db.activities.get(id);
   if (!existing) return;
 
   // Soft delete activity
-  await db.put('activities', {
+  await db.activities.put({
     ...existing,
     deleted_at: Date.now(),
     updated_at: Date.now()
   });
 
-  // Remove activity from sessions (Referential Integrity) - logic remains same, we just remove the ID from the array
-  // Note: We don't soft-delete the session just because an activity was removed from it, unless it was the only activity?
-  // The original logic removed the activity ID from the session's activity_ids array. We should keep that behavior.
+  // Remove activity from sessions (Referential Integrity)
+  // Find sessions with this activity using the multi-entry index
+  const sessionsWithActivity = await db.sessions
+    .where('activity_ids')
+    .equals(id)
+    .toArray();
 
-  const tx = db.transaction(['sessions'], 'readwrite');
-  const sessionStore = tx.objectStore('sessions');
+  // Update each session to remove the activity ID
+  await db.sessions.bulkPut(
+    sessionsWithActivity.map(session => ({
+      ...session,
+      activity_ids: session.activity_ids.filter((aid) => aid !== id),
+      updated_at: Date.now()
+    }))
+  );
+};
 
-  // Find sessions with this activity
-  const sessionsWithActivity = await sessionStore.index('by-activity_ids').getAllKeys(id);
-
-  for (const sessionId of sessionsWithActivity) {
-    const session = await sessionStore.get(sessionId);
-    if (session) {
-      session.activity_ids = session.activity_ids.filter((aid) => aid !== id);
-      session.updated_at = Date.now();
-      await sessionStore.put(session);
-    }
+// Sync helpers - allow creating/updating with all fields preserved
+export const putActivityForSync = async (activity: Omit<Activity, 'id'>) => {
+  // Check if activity with this sync_id already exists
+  const existing = await db.activities.where('sync_id').equals(activity.sync_id).first();
+  if (existing) {
+    return db.activities.put({
+      ...existing,
+      ...activity,
+      id: existing.id
+    });
+  } else {
+    return db.activities.add(activity as Activity);
   }
-  await tx.done;
+};
+
+export const putSessionForSync = async (session: Omit<Session, 'id'>) => {
+  // Check if session with this sync_id already exists
+  const existing = await db.sessions.where('sync_id').equals(session.sync_id).first();
+  if (existing) {
+    return db.sessions.put({
+      ...existing,
+      ...session,
+      id: existing.id
+    });
+  } else {
+    return db.sessions.add(session as Session);
+  }
 };
 
 // Sessions
 export const createSession = async (session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => {
-  const db = await getDB();
-  return db.add('sessions', {
+  return db.sessions.add({
     ...session,
     sync_id: uuidv4(),
     updated_at: Date.now(),
@@ -162,24 +147,26 @@ export const createSession = async (session: Omit<Session, 'id' | 'sync_id' | 'u
 };
 
 export const getSessions = async (includeDeleted = false) => {
-  const db = await getDB();
   // Sort by start_time descending
-  const sessions = await db.getAllFromIndex('sessions', 'by-start_time');
+  const sessions = await db.sessions.orderBy('start_time').reverse().toArray();
   const filtered = includeDeleted ? sessions : sessions.filter(s => s.deleted_at === null);
-  return filtered.reverse();
+  return filtered;
 };
 
 export const getSessionsByActivity = async (activityId: number) => {
-  const db = await getDB();
-  const sessions = await db.getAllFromIndex('sessions', 'by-activity_ids', activityId);
-  return sessions.filter(s => s.deleted_at === null).sort((a, b) => b.start_time - a.start_time);
+  const sessions = await db.sessions
+    .where('activity_ids')
+    .equals(activityId)
+    .toArray();
+  return sessions
+    .filter(s => s.deleted_at === null)
+    .sort((a, b) => b.start_time - a.start_time);
 }
 
 export const updateSession = async (id: number, session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => {
-  const db = await getDB();
-  const existing = await db.get('sessions', id);
+  const existing = await db.sessions.get(id);
   if (!existing) throw new Error('Session not found');
-  return db.put('sessions', {
+  return db.sessions.put({
     ...existing,
     ...session,
     id,
@@ -188,11 +175,10 @@ export const updateSession = async (id: number, session: Omit<Session, 'id' | 's
 };
 
 export const deleteSession = async (id: number) => {
-  const db = await getDB();
-  const existing = await db.get('sessions', id);
+  const existing = await db.sessions.get(id);
   if (!existing) return;
 
-  return db.put('sessions', {
+  return db.sessions.put({
     ...existing,
     deleted_at: Date.now(),
     updated_at: Date.now()
@@ -201,16 +187,42 @@ export const deleteSession = async (id: number) => {
 
 // Seeding and Reset
 export const seedDB = async () => {
-  const db = await getDB();
-  const activityCount = await db.count('activities');
+  const activityCount = await db.activities.count();
   if (activityCount > 0) return; // Already seeded
 
   const now = Date.now();
 
   // Default Activities
-  const sleepId = await db.add('activities', { name: 'Sleep', goal: 8, goal_scale: 'daily', color: '#3b82f6', created_at: now, updated_at: now, sync_id: uuidv4(), deleted_at: null });
-  const gymId = await db.add('activities', { name: 'Gym', goal: 1, goal_scale: 'daily', color: '#6b7280', created_at: now, updated_at: now, sync_id: uuidv4(), deleted_at: null });
-  const socialId = await db.add('activities', { name: 'Socializing', goal: 10, goal_scale: 'weekly', color: '#eab308', created_at: now, updated_at: now, sync_id: uuidv4(), deleted_at: null });
+  const sleepId = await db.activities.add({ 
+    name: 'Sleep', 
+    goal: 8, 
+    goal_scale: 'daily', 
+    color: '#3b82f6', 
+    created_at: now, 
+    updated_at: now, 
+    sync_id: uuidv4(), 
+    deleted_at: null 
+  });
+  const gymId = await db.activities.add({ 
+    name: 'Gym', 
+    goal: 1, 
+    goal_scale: 'daily', 
+    color: '#6b7280', 
+    created_at: now, 
+    updated_at: now, 
+    sync_id: uuidv4(), 
+    deleted_at: null 
+  });
+  const socialId = await db.activities.add({ 
+    name: 'Socializing', 
+    goal: 10, 
+    goal_scale: 'weekly', 
+    color: '#eab308', 
+    created_at: now, 
+    updated_at: now, 
+    sync_id: uuidv4(), 
+    deleted_at: null 
+  });
 
   const oneHour = 3600 * 1000;
   const today = new Date(now);
@@ -351,7 +363,7 @@ export const seedDB = async () => {
     const startTime = sessionDate.getTime();
     const endTime = startTime + (session.duration * oneHour);
 
-    await db.add('sessions', {
+    await db.sessions.add({
       name: session.name,
       start_time: startTime,
       end_time: endTime,
@@ -364,18 +376,12 @@ export const seedDB = async () => {
 };
 
 export const resetDB = async () => {
-  const db = await getDB();
-  const tx = db.transaction(['sessions', 'activities'], 'readwrite');
-  await tx.objectStore('sessions').clear();
-  await tx.objectStore('activities').clear();
-  await tx.done;
+  await db.sessions.clear();
+  await db.activities.clear();
   await seedDB();
 };
 
 export const clearAllData = async () => {
-  const db = await getDB();
-  const tx = db.transaction(['sessions', 'activities'], 'readwrite');
-  await tx.objectStore('sessions').clear();
-  await tx.objectStore('activities').clear();
-  await tx.done;
+  await db.sessions.clear();
+  await db.activities.clear();
 };

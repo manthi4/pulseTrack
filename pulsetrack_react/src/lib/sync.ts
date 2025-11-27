@@ -1,10 +1,8 @@
 import {
     getActivities,
     getSessions,
-    createActivity,
-    updateActivity,
-    createSession,
-    updateSession,
+    putActivityForSync,
+    putSessionForSync,
     type Activity,
     type Session
 } from './db';
@@ -109,8 +107,8 @@ const syncActivities = async (spreadsheetId: string) => {
                 mergedActivities.set(id, local);
             } else {
                 mergedActivities.set(id, remote);
-                // Update local DB
-                await updateActivity(local.id!, remote);
+                // Update local DB - use putActivityForSync to preserve all remote fields
+                await putActivityForSync(remote);
             }
         } else if (local) {
             // Only local -> keep it (will be pushed to remote)
@@ -119,7 +117,7 @@ const syncActivities = async (spreadsheetId: string) => {
             // Only remote -> add to local
             // If it's deleted on remote and we don't have it, we can ignore it or add it as deleted.
             // Adding it as deleted ensures we have the tombstone.
-            await createActivity(remote);
+            await putActivityForSync(remote);
             mergedActivities.set(id, remote);
         }
     }
@@ -186,12 +184,12 @@ const syncSessions = async (spreadsheetId: string) => {
                 mergedSessions.set(id, local);
             } else {
                 mergedSessions.set(id, remote);
-                await updateSession(local.id!, remote);
+                await putSessionForSync(remote);
             }
         } else if (local) {
             mergedSessions.set(id, local);
         } else if (remote) {
-            await createSession(remote);
+            await putSessionForSync(remote);
             mergedSessions.set(id, remote);
         }
     }
