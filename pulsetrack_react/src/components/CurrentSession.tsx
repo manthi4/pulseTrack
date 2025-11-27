@@ -56,7 +56,7 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
   }, []);
 
   const initialState = loadTimerState();
-  
+
   const [timerType, setTimerType] = useState<TimerType>(initialState.timerType || 'stopwatch');
   const [selectedActivityIds, setSelectedActivityIds] = useState<number[]>(initialState.selectedActivityIds || []);
   const [sessionName, setSessionName] = useState(initialState.sessionName || '');
@@ -90,26 +90,26 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
   const hasRestoredRef = useRef(false);
   // Store the restoration time to use consistently in calculations
   const restorationTimeRef = useRef<number | null>(null);
-  
+
   // Check timer state on mount - handle case where timer was running when user navigated away
   useEffect(() => {
     // Only restore once on mount
     if (hasRestoredRef.current) return;
-    
+
     if (isRunning && timerStartTimestamp) {
       // Capture the exact moment we're restoring - do this synchronously
       const restoreTime = Date.now();
       restorationTimeRef.current = restoreTime;
-      
+
       // Calculate how much time has passed since the timer was started
       const storedTimestamp = timerStartTimestamp;
       const elapsedSinceStart = restoreTime - storedTimestamp;
-      
+
       if (timerType === 'countdown') {
         // Use the current initialRemainingTime value (from localStorage)
         const storedRemaining = initialRemainingTime;
         const currentRemaining = storedRemaining - elapsedSinceStart;
-        
+
         if (currentRemaining <= 0) {
           // Timer completed while away
           setIsRunning(false);
@@ -277,7 +277,7 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
   const prevTimerTypeRef = useRef<TimerType | null>(null);
   const prevDurationRef = useRef<{ countdownHours: number; countdownMinutes: number; countdownSeconds: number } | null>(null);
   const isInitialMountRef = useRef(true);
-  
+
   useEffect(() => {
     // Skip on initial mount - state is already initialized from localStorage
     if (isInitialMountRef.current) {
@@ -286,14 +286,14 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
       prevDurationRef.current = { countdownHours, countdownMinutes, countdownSeconds };
       return;
     }
-    
+
     const timerTypeChanged = prevTimerTypeRef.current !== null && prevTimerTypeRef.current !== timerType;
     const durationChanged = prevDurationRef.current !== null && (
       prevDurationRef.current.countdownHours !== countdownHours ||
       prevDurationRef.current.countdownMinutes !== countdownMinutes ||
       prevDurationRef.current.countdownSeconds !== countdownSeconds
     );
-    
+
     // Only reset if timer type changed or duration changed, and timer is not running
     // Don't reset when just pausing (isRunning changes but type/duration don't)
     if ((timerTypeChanged || durationChanged) && !isRunning) {
@@ -308,7 +308,7 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
         setTimerStartTimestamp(null);
       }
     }
-    
+
     prevTimerTypeRef.current = timerType;
     prevDurationRef.current = { countdownHours, countdownMinutes, countdownSeconds };
   }, [timerType, countdownHours, countdownMinutes, countdownSeconds]); // Removed isRunning from dependencies
@@ -392,11 +392,11 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
       alert('Please select at least one activity.');
       return;
     }
-    
+
     const now = Date.now();
     setIsRunning(true);
     setTimerStartTimestamp(now);
-    
+
     if (!sessionStartTime) {
       setSessionStartTime(now);
     }
@@ -413,7 +413,7 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
       const currentRemaining = calculateCurrentTime();
       setInitialRemainingTime(currentRemaining);
     }
-    
+
     setIsRunning(false);
     setTimerStartTimestamp(null);
   };
@@ -469,16 +469,16 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
   };
 
   const displayTime = timerType === 'stopwatch' ? elapsedTime : remainingTime;
-  
+
   // Force re-render periodically when running to update display
   const [, setForceUpdate] = useState(0);
   useEffect(() => {
     if (!isRunning) return;
-    
+
     const interval = setInterval(() => {
       setForceUpdate(prev => prev + 1);
     }, 100);
-    
+
     return () => clearInterval(interval);
   }, [isRunning]);
 
@@ -489,7 +489,7 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
 
         {/* Session Name */}
         <div className="mb-6">
-          <label className="text-sm font-medium block mb-2">Session Name (Optional)</label>
+          <label className="text-sm font-medium block mb-2">Session Name</label>
           <Input
             value={sessionName}
             onChange={(e) => setSessionName(e.target.value)}
@@ -536,28 +536,43 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
         {/* Timer Type Selection */}
         <div className="mb-6">
           <label className="text-sm font-medium block mb-2">Timer Type</label>
-          <div className="flex gap-4">
+          <div
+            className={`relative inline-flex bg-card border border-border rounded-lg p-1 ${isRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
+            style={{ width: 'fit-content' }}
+          >
+            {/* Sliding background indicator */}
+            <div
+              className="absolute top-1 bottom-1 bg-primary rounded-md transition-all duration-300 ease-in-out"
+              style={{
+                left: timerType === 'stopwatch' ? '4px' : '50%',
+                width: 'calc(50% - 4px)',
+              }}
+            />
+
+            {/* Stopwatch option */}
             <button
               onClick={() => !isRunning && setTimerType('stopwatch')}
               disabled={isRunning}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md border transition-all ${timerType === 'stopwatch'
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-card border-border hover:bg-accent'
-                } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              className={`relative z-10 flex items-center gap-2 px-6 py-2 rounded-md transition-all duration-300 ${timerType === 'stopwatch'
+                ? 'text-primary-foreground'
+                : 'text-foreground hover:text-primary'
+                } ${isRunning ? 'cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <Clock className="h-4 w-4" />
-              Stopwatch
+              <span className="font-medium">Stopwatch</span>
             </button>
+
+            {/* Countdown option */}
             <button
               onClick={() => !isRunning && setTimerType('countdown')}
               disabled={isRunning}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md border transition-all ${timerType === 'countdown'
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-card border-border hover:bg-accent'
-                } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              className={`relative z-10 flex items-center gap-2 px-6 py-2 rounded-md transition-all duration-300 ${timerType === 'countdown'
+                ? 'text-primary-foreground'
+                : 'text-foreground hover:text-primary'
+                } ${isRunning ? 'cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <Timer className="h-4 w-4" />
-              Countdown
+              <span className="font-medium">Countdown</span>
             </button>
           </div>
         </div>
@@ -604,9 +619,22 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
           </div>
         )}
 
-        {/* Timer Display */}
+        {/* Timer Display - Clickable to Start/Pause */}
         <div className="mb-8">
-          <div className="bg-card border border-border rounded-lg p-8 sm:p-12 text-center">
+          <button
+            onClick={() => {
+              if (isRunning) {
+                handlePause();
+              } else {
+                handleStart();
+              }
+            }}
+            disabled={!isRunning && (selectedActivityIds.length === 0 || (timerType === 'countdown' && remainingTime <= 0))}
+            className={`w-full bg-card border-2 border-border rounded-lg p-8 sm:p-12 text-center transition-all ${selectedActivityIds.length === 0 || (timerType === 'countdown' && remainingTime <= 0 && !isRunning)
+              ? 'opacity-50 cursor-not-allowed'
+              : 'hover:border-primary hover:shadow-lg cursor-pointer'
+              }`}
+          >
             <div className={`text-6xl sm:text-7xl md:text-8xl font-mono font-bold mb-4 ${timerType === 'countdown' && remainingTime <= 60000 && remainingTime > 0
               ? 'text-destructive animate-pulse'
               : 'text-primary'
@@ -616,41 +644,25 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
             {timerType === 'countdown' && remainingTime <= 0 && !isRunning && (
               <p className="text-muted-foreground text-sm">Timer completed</p>
             )}
-          </div>
+            {!isRunning && selectedActivityIds.length > 0 && !(timerType === 'countdown' && remainingTime <= 0) && (
+              <Play className="h-12 w-12 mx-auto mt-4 text-primary" />
+            )}
+            {isRunning && (
+              <Pause className="h-12 w-12 mx-auto mt-4 text-primary" />
+            )}
+          </button>
         </div>
 
         {/* Timer Controls */}
         <div className="flex flex-wrap justify-center gap-4 mb-6">
-          {!isRunning ? (
-            <Button
-              onClick={handleStart}
-              size="lg"
-              disabled={selectedActivityIds.length === 0 || (timerType === 'countdown' && remainingTime <= 0)}
-              className="min-w-[120px]"
-            >
-              <Play className="h-5 w-5 mr-2" />
-              Start
-            </Button>
-          ) : (
-            <Button
-              onClick={handlePause}
-              size="lg"
-              variant="secondary"
-              className="min-w-[120px]"
-            >
-              <Pause className="h-5 w-5 mr-2" />
-              Pause
-            </Button>
-          )}
-
           <Button
             onClick={handleFinish}
             size="lg"
             variant="default"
             disabled={!sessionStartTime}
-            className="min-w-[120px]"
+            className="min-w-[180px]"
           >
-            <CheckCircle className="h-5 w-5 mr-2" />
+            <CheckCircle className="h-6 w-6 mr-2" />
             Finish
           </Button>
 
@@ -659,9 +671,9 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
             size="lg"
             variant="outline"
             disabled={isRunning}
-            className="min-w-[120px]"
+            className="min-w-[180px]"
           >
-            <RotateCcw className="h-5 w-5 mr-2" />
+            <RotateCcw className="h-6 w-6 mr-2" />
             Reset
           </Button>
         </div>
