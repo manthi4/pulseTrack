@@ -38,7 +38,10 @@ export function usePWAInstall() {
     // Check manifest
     const checkManifest = async () => {
       try {
-        const response = await fetch('/manifest.webmanifest');
+        // Use Vite's BASE_URL to construct the correct path
+        const baseUrl = import.meta.env.BASE_URL;
+        const manifestPath = `${baseUrl}manifest.webmanifest`.replace(/\/\//g, '/');
+        const response = await fetch(manifestPath);
         if (response.ok) {
           const manifest = await response.json();
           setDebugInfo(prev => prev + ` | Manifest OK: ${manifest.name}`);
@@ -124,7 +127,10 @@ export function usePWAInstall() {
     // Fallback: Check if we can determine installability
     // In Chrome, we can check the manifest and service worker
     try {
-      const manifestResponse = await fetch('/manifest.webmanifest');
+      // Use Vite's BASE_URL to construct the correct path
+      const baseUrl = import.meta.env.BASE_URL;
+      const manifestPath = `${baseUrl}manifest.webmanifest`.replace(/\/\//g, '/');
+      const manifestResponse = await fetch(manifestPath);
       const hasSW = 'serviceWorker' in navigator && (await navigator.serviceWorker.getRegistrations()).length > 0;
       
       if (manifestResponse.ok && hasSW) {

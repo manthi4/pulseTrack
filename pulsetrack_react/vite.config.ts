@@ -2,8 +2,14 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// GitHub Pages base path - change this if your repo name is different
+// For root deployment (username.github.io), use '/'
+// For project pages (username.github.io/repo-name), use '/repo-name/'
+const base = process.env.GITHUB_PAGES_BASE || '/pulseTrack/'
+
 // https://vite.dev/config/
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -16,8 +22,8 @@ export default defineConfig({
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',
-        start_url: '/',
-        scope: '/',
+        start_url: base,
+        scope: base,
         orientation: 'portrait',
         icons: [
           {
@@ -77,7 +83,7 @@ export default defineConfig({
             }
           }
         ],
-        navigateFallback: '/index.html',
+        navigateFallback: `${base}index.html`,
         navigateFallbackDenylist: [/^\/_/, /\/[^/?]+\.[^/]+$/]
       },
       devOptions: {

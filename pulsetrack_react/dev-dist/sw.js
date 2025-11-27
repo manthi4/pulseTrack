@@ -82,13 +82,13 @@ define(['./workbox-959db468'], (function (workbox) { 'use strict';
    */
   workbox.precacheAndRoute([{
     "url": "registerSW.js",
-    "revision": "3ca0b8505b4bec776b69afdba2768812"
+    "revision": "fe1b6e4703596273662c7afc1ee3df9b"
   }, {
-    "url": "/index.html",
-    "revision": "0.38r50f6jcng"
+    "url": "/pulseTrack/index.html",
+    "revision": "0.vaa3ebtqd5"
   }], {});
   workbox.cleanupOutdatedCaches();
-  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
+  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/pulseTrack/index.html"), {
     allowlist: [/^\/$/],
     denylist: [/^\/_/, /\/[^/?]+\.[^/]+$/]
   }));

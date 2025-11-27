@@ -3,7 +3,7 @@ import { LayoutDashboard, ChevronLeft, ChevronRight, RotateCcw, Settings, Trendi
 import { Button } from './ui/Button';
 import { cn } from '../lib/utils';
 import { useMobileMenu } from './Layout';
-import { type Activity, type Session, clearAllData } from '../lib/db';
+import { type Activity, type Session } from '../lib/db';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 type Page = 'dashboard' | 'advanced' | 'trends' | 'settings' | 'currentSession' | 'sessions';
