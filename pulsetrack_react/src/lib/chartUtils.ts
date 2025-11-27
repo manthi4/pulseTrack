@@ -6,7 +6,7 @@ export type DateRange = '7' | '30' | '90' | 'custom';
 export type AggregationType = 'daily' | 'weekly' | 'monthly';
 
 export interface ActivityStats {
-  activityId: number;
+  activityId: string;
   average: number;
   total: number;
   max: number;
@@ -55,7 +55,7 @@ export const prepareChartData = (
     const periodEndTime = periodEnd.getTime();
 
     // Calculate time spent per activity for this period
-    const activityTimes: Record<number, number> = {};
+    const activityTimes: Record<string, number> = {};
     
     sessions.forEach(session => {
       const sessionStart = session.start_time;
@@ -67,11 +67,11 @@ export const prepareChartData = (
         const overlapEnd = Math.min(sessionEnd, periodEndTime);
         const overlapDuration = overlapEnd - overlapStart;
         
-        session.activity_ids.forEach(activityId => {
-          if (!activityTimes[activityId]) {
-            activityTimes[activityId] = 0;
+        session.activity_ids.forEach(activitySyncId => {
+          if (!activityTimes[activitySyncId]) {
+            activityTimes[activitySyncId] = 0;
           }
-          activityTimes[activityId] += overlapDuration / session.activity_ids.length;
+          activityTimes[activitySyncId] += overlapDuration / session.activity_ids.length;
         });
       }
     });
@@ -84,10 +84,10 @@ export const prepareChartData = (
     };
 
     activities.forEach(activity => {
-      if (activity.id !== undefined) {
-        const hours = (activityTimes[activity.id] || 0) / (1000 * 60 * 60);
-        dataPoint[`activity_${activity.id}`] = Number(hours.toFixed(2));
-        // Also add name-based key for Tremor easier mapping if needed, but ID is safer
+      if (activity.sync_id) {
+        const hours = (activityTimes[activity.sync_id] || 0) / (1000 * 60 * 60);
+        dataPoint[`activity_${activity.sync_id}`] = Number(hours.toFixed(2));
+        // Also add name-based key for Tremor easier mapping if needed, but sync_id is safer
         dataPoint[activity.name] = Number(hours.toFixed(2));
       }
     });
@@ -104,14 +104,14 @@ export const calculateStats = (
   const stats: ActivityStats[] = [];
   
   activities.forEach(activity => {
-    if (activity.id === undefined) return;
+    if (!activity.sync_id) return;
     
-    const dataKey = `activity_${activity.id}`;
+    const dataKey = `activity_${activity.sync_id}`;
     const values = chartData.map(point => point[dataKey] as number).filter(v => v > 0);
     
     if (values.length === 0) {
       stats.push({
-        activityId: activity.id,
+        activityId: activity.sync_id,
         average: 0,
         total: 0,
         max: 0,
@@ -144,7 +144,7 @@ export const calculateStats = (
         );
     
     stats.push({
-      activityId: activity.id,
+      activityId: activity.sync_id!,
       average: Number(average.toFixed(2)),
       total: Number(total.toFixed(2)),
       max: Number(max.toFixed(2)),

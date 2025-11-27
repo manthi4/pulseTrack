@@ -90,3 +90,7 @@ $RECYCLE.BIN/
 
 # Local development
 *.local
+
+# Dexie Cloud credentials
+dexie-cloud.json
+dexie-cloud.key

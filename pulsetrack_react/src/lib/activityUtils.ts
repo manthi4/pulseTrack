@@ -30,7 +30,7 @@ export function calculateActivityProgress(
 
   const relevantSessions = sessions.filter(session => {
     const sessionEndTime = new Date(session.end_time).getTime();
-    return session.activity_ids.includes(activity.id!) &&
+    return activity.sync_id && session.activity_ids.includes(activity.sync_id) &&
       sessionEndTime >= periodStartTime &&
       sessionEndTime <= periodEndTime;
   });
@@ -66,7 +66,7 @@ function isDayGoalMet(
   sessions: Session[],
   date: Date
 ): boolean {
-  if (!activity.id) return false;
+  if (!activity.sync_id) return false;
 
   const dayStart = startOfDay(date);
   const dayEnd = endOfDay(date);
@@ -76,7 +76,7 @@ function isDayGoalMet(
   // Get sessions for this activity on this day
   const daySessions = sessions.filter(s => {
     const sessionEndTime = new Date(s.end_time).getTime();
-    return s.activity_ids.includes(activity.id!) &&
+    return s.activity_ids.includes(activity.sync_id!) &&
       sessionEndTime >= dayStartTime &&
       sessionEndTime <= dayEndTime;
   });
@@ -116,13 +116,13 @@ export function calculateActivityStreak(
   activity: Activity,
   sessions: Session[]
 ): ActivityStreak {
-  if (!activity.id || sessions.length === 0) {
+  if (!activity.sync_id || sessions.length === 0) {
     return { current: 0, longest: 0 };
   }
 
   // Get all sessions for this activity
   const activitySessions = sessions.filter(s => 
-    s.activity_ids.includes(activity.id!)
+    s.activity_ids.includes(activity.sync_id!)
   );
 
   if (activitySessions.length === 0) {

@@ -53,22 +53,22 @@ export function useAppData() {
   const addSession = useCallback((session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => 
     withReload(() => createSession(session)), [withReload]);
 
-  const editSession = useCallback((id: number, session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => 
-    withReload(() => updateSession(id, session)), [withReload]);
+  const editSession = useCallback((syncId: string, session: Omit<Session, 'sync_id' | 'id' | 'updated_at' | 'deleted_at'>) => 
+    withReload(() => updateSession(syncId, session)), [withReload]);
 
-  const removeSession = useCallback(async (id: number) => {
-    await withReload(() => deleteSession(id));
+  const removeSession = useCallback(async (syncId: string) => {
+    await withReload(() => deleteSession(syncId));
   }, [withReload]);
 
-  const addActivity = useCallback((activity: Omit<Activity, 'id' | 'created_at'>) => 
+  const addActivity = useCallback((activity: Omit<Activity, 'sync_id' | 'id' | 'created_at' | 'updated_at' | 'deleted_at'>) => 
     withReload(() => createActivity(activity)), [withReload]);
 
-  const editActivity = useCallback((id: number, activity: Partial<Omit<Activity, 'id' | 'created_at'>>) => 
-    withReload(() => updateActivity(id, activity)), [withReload]);
+  const editActivity = useCallback((syncId: string, activity: Partial<Omit<Activity, 'sync_id' | 'id' | 'created_at'>>) => 
+    withReload(() => updateActivity(syncId, activity)), [withReload]);
 
-  const removeActivity = useCallback(async (id: number) => {
+  const removeActivity = useCallback(async (syncId: string) => {
     if (confirm('Are you sure you want to delete this activity? Associated sessions will not be deleted but will lose this tag.')) {
-      await withReload(() => deleteActivity(id));
+      await withReload(() => deleteActivity(syncId));
       return true;
     }
     return false;

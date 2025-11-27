@@ -11,9 +11,9 @@ import { cn } from '../lib/utils';
 interface SessionsProps {
   sessions: Session[];
   activities: Activity[];
-  onDeleteSession: (id: number) => void;
-  onEditSession: (id: number, session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => Promise<void>;
-  onAddSession: (session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => Promise<void>;
+  onDeleteSession: (syncId: string) => void;
+  onEditSession: (syncId: string, session: Omit<Session, 'sync_id' | 'id' | 'updated_at' | 'deleted_at'>) => Promise<void>;
+  onAddSession: (session: Omit<Session, 'sync_id' | 'id' | 'updated_at' | 'deleted_at'>) => Promise<void>;
 }
 
 const ITEMS_PER_PAGE = 30;
@@ -33,21 +33,21 @@ export const Sessions: React.FC<SessionsProps> = ({
   onAddSession,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedActivityId, setSelectedActivityId] = useState<number | null>(null);
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [dateRangeStart, setDateRangeStart] = useState<string>('');
   const [dateRangeEnd, setDateRangeEnd] = useState<string>('');
-  const [selectedSessionIds, setSelectedSessionIds] = useState<Set<number>>(new Set());
+  const [selectedSessionIds, setSelectedSessionIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [isLogSessionOpen, setIsLogSessionOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
 
   const activityMap = useMemo(() => {
-    const map = new Map<number, Activity>();
-    activities.forEach(a => { if (a.id !== undefined) map.set(a.id, a); });
+    const map = new Map<string, Activity>();
+    activities.forEach(a => { if (a.sync_id) map.set(a.sync_id, a); });
     return map;
   }, [activities]);
 
-  const getActivity = (id: number) => activityMap.get(id);
+  const getActivity = (syncId: string) => activityMap.get(syncId);
 
   // Filter sessions based on search, activity, and date range
   const filteredSessions = useMemo(() => {
@@ -98,12 +98,12 @@ export const Sessions: React.FC<SessionsProps> = ({
     setSelectedSessionIds(new Set());
   }, [searchQuery, selectedActivityId, dateRangeStart, dateRangeEnd]);
 
-  const toggleSessionSelection = (sessionId: number) => {
+  const toggleSessionSelection = (sessionSyncId: string) => {
     const newSet = new Set(selectedSessionIds);
-    if (newSet.has(sessionId)) {
-      newSet.delete(sessionId);
+    if (newSet.has(sessionSyncId)) {
+      newSet.delete(sessionSyncId);
     } else {
-      newSet.add(sessionId);
+      newSet.add(sessionSyncId);
     }
     setSelectedSessionIds(newSet);
   };
@@ -112,7 +112,7 @@ export const Sessions: React.FC<SessionsProps> = ({
     if (selectedSessionIds.size === paginatedSessions.length) {
       setSelectedSessionIds(new Set());
     } else {
-      setSelectedSessionIds(new Set(paginatedSessions.map(s => s.id!).filter(id => id !== undefined)));
+      setSelectedSessionIds(new Set(paginatedSessions.map(s => s.sync_id).filter((id): id is string => id !== undefined)));
     }
   };
 
@@ -135,9 +135,9 @@ export const Sessions: React.FC<SessionsProps> = ({
     setIsLogSessionOpen(true);
   };
 
-  const handleSaveSession = async (session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => {
-    if (editingSession?.id) {
-      await onEditSession(editingSession.id, session);
+  const handleSaveSession = async (session: Omit<Session, 'sync_id' | 'id' | 'updated_at' | 'deleted_at'>) => {
+    if (editingSession?.sync_id) {
+      await onEditSession(editingSession.sync_id, session);
     } else {
       await onAddSession(session);
     }
@@ -148,7 +148,7 @@ export const Sessions: React.FC<SessionsProps> = ({
   const handleDuplicateSession = async (session: Session) => {
     const duration = session.end_time - session.start_time;
     const now = Date.now();
-    const duplicatedSession: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'> = {
+    const duplicatedSession: Omit<Session, 'sync_id' | 'id' | 'updated_at' | 'deleted_at'> = {
       name: `${session.name} (Copy)`,
       start_time: now,
       end_time: now + duration,
@@ -214,12 +214,12 @@ export const Sessions: React.FC<SessionsProps> = ({
 
             {/* Activity Filter */}
             <Select
-              value={selectedActivityId?.toString() || ''}
-              onChange={(e) => setSelectedActivityId(e.target.value ? parseInt(e.target.value) : null)}
+              value={selectedActivityId || ''}
+              onChange={(e) => setSelectedActivityId(e.target.value || null)}
             >
               <option value="">All Activities</option>
               {activities.map(activity => (
-                <option key={activity.id} value={activity.id?.toString()}>
+                <option key={activity.sync_id} value={activity.sync_id}>
                   {activity.name}
                 </option>
               ))}
@@ -286,10 +286,10 @@ export const Sessions: React.FC<SessionsProps> = ({
 
               <div className="grid gap-4">
                 {paginatedSessions.map((session) => {
-                  const isSelected = session.id !== undefined && selectedSessionIds.has(session.id);
+                  const isSelected = session.sync_id && selectedSessionIds.has(session.sync_id);
                   return (
                     <div
-                      key={session.id}
+                      key={session.sync_id}
                       className={cn(
                         "flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg border bg-card text-card-foreground shadow-sm gap-3 transition-all",
                         isSelected && "ring-2 ring-primary border-primary"
@@ -299,7 +299,7 @@ export const Sessions: React.FC<SessionsProps> = ({
                         <input
                           type="checkbox"
                           checked={isSelected}
-                          onChange={() => session.id && toggleSessionSelection(session.id)}
+                          onChange={() => session.sync_id && toggleSessionSelection(session.sync_id)}
                           style={{ backgroundColor: 'transparent' }}
                           className="h-5 w-5 rounded border-2 border-border accent-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer transition-all hover:border-primary/60 checked:border-primary shrink-0"
                         />
@@ -314,12 +314,12 @@ export const Sessions: React.FC<SessionsProps> = ({
                             {format(session.start_time, 'PP p')}
                           </div>
                           <div className="flex flex-wrap gap-2 mt-2">
-                            {session.activity_ids.map(id => {
-                              const activity = getActivity(id);
+                            {session.activity_ids.map(syncId => {
+                              const activity = getActivity(syncId);
                               const color = activity?.color || '#3b82f6';
                               return (
                                 <span
-                                  key={id}
+                                  key={syncId}
                                   className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:opacity-80"
                                   style={{
                                     borderColor: `${color}40`,
@@ -338,10 +338,10 @@ export const Sessions: React.FC<SessionsProps> = ({
                         <Button variant="ghost" size="icon" onClick={() => handleDuplicateSession(session)} title="Duplicate session">
                           <Copy className="h-4 w-4 text-muted-foreground hover:text-primary" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => session.id && handleEditSession(session)} title="Edit session">
+                        <Button variant="ghost" size="icon" onClick={() => handleEditSession(session)} title="Edit session">
                           <Edit className="h-4 w-4 text-muted-foreground hover:text-primary" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => session.id && onDeleteSession(session.id)} title="Delete session">
+                        <Button variant="ghost" size="icon" onClick={() => session.sync_id && onDeleteSession(session.sync_id)} title="Delete session">
                           <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                         </Button>
                       </div>

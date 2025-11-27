@@ -11,8 +11,8 @@ type Page = 'dashboard' | 'advanced' | 'trends' | 'settings' | 'currentSession' 
 interface SidebarProps {
   currentPage: Page;
   onPageChange: (page: Page) => void;
-  onSelectActivity: (id: number | null) => void;
-  selectedActivityId: number | null;
+  onSelectActivity: (syncId: string | null) => void;
+  selectedActivityId: string | null;
   onReset: () => void;
   activities: Activity[];
   sessions: Session[];

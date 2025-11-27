@@ -16,17 +16,17 @@ import { Flame } from 'lucide-react';
 interface DashboardProps {
   activities: Activity[];
   sessions: Session[];
-  selectedActivityId: number | null;
-  onSelectActivity: (id: number | null) => void;
+  selectedActivityId: string | null;
+  onSelectActivity: (syncId: string | null) => void;
 
   // Data Operations
-  onAddActivity: (activity: Omit<Activity, 'id' | 'created_at'>) => Promise<void>;
-  onEditActivity: (id: number, activity: Partial<Omit<Activity, 'id' | 'created_at'>>) => Promise<void>;
-  onDeleteActivity: (id: number) => Promise<boolean>;
+  onAddActivity: (activity: Omit<Activity, 'sync_id' | 'id' | 'created_at' | 'updated_at' | 'deleted_at'>) => Promise<void>;
+  onEditActivity: (syncId: string, activity: Partial<Omit<Activity, 'sync_id' | 'id' | 'created_at'>>) => Promise<void>;
+  onDeleteActivity: (syncId: string) => Promise<boolean>;
 
-  onAddSession: (session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => Promise<void>;
-  onEditSession: (id: number, session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => Promise<void>;
-  onDeleteSession: (id: number) => Promise<void>;
+  onAddSession: (session: Omit<Session, 'sync_id' | 'id' | 'updated_at' | 'deleted_at'>) => Promise<void>;
+  onEditSession: (syncId: string, session: Omit<Session, 'sync_id' | 'id' | 'updated_at' | 'deleted_at'>) => Promise<void>;
+  onDeleteSession: (syncId: string) => Promise<void>;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -49,7 +49,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
 
-  const selectedActivity = activities.find(a => a.id === selectedActivityId);
+  const selectedActivity = activities.find(a => a.sync_id === selectedActivityId);
 
   // Calculate streak for selected activity
   const streak = useMemo(() => {
@@ -94,22 +94,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleActivitySave = async (activityData: Partial<Activity>) => {
-    editingActivity?.id
-      ? await onEditActivity(editingActivity.id, activityData)
+    editingActivity?.sync_id
+      ? await onEditActivity(editingActivity.sync_id, activityData)
       : await onAddActivity(activityData as any);
     closeActivityDialog();
   };
 
-  const handleSessionSave = async (session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => {
-    editingSession?.id
-      ? await onEditSession(editingSession.id, session)
+  const handleSessionSave = async (session: Omit<Session, 'sync_id' | 'id' | 'updated_at' | 'deleted_at'>) => {
+    editingSession?.sync_id
+      ? await onEditSession(editingSession.sync_id, session)
       : await onAddSession(session);
     closeSessionDialog();
   };
 
-  const handleDeleteActivity = async (id: number) => {
-    const success = await onDeleteActivity(id);
-    if (success && selectedActivityId === id) {
+  const handleDeleteActivity = async (syncId: string) => {
+    const success = await onDeleteActivity(syncId);
+    if (success && selectedActivityId === syncId) {
       onSelectActivity(null);
     }
   };
@@ -194,7 +194,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <TrendChart
                 activities={activities}
                 sessions={sessions}
-                selectedActivityId={selectedActivity.id}
+                selectedActivityId={selectedActivity.sync_id}
                 title="Activity Trend"
               />
             </div>

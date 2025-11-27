@@ -1,9 +1,10 @@
 import React from 'react';
-import { Palette, Type, Moon, Sun, RotateCcw } from 'lucide-react';
+import { Palette, Type, Moon, Sun, RotateCcw, Cloud, CloudOff, LogIn, LogOut, RefreshCw } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Switch } from './ui/Switch';
 import { Select } from './ui/Select';
 import { useTheme, type FontFamily } from '../contexts/ThemeContext';
+import { useCloudSync } from '../hooks/useCloudSync';
 import { cn } from '../lib/utils';
 
 const ACCENT_COLORS = [
@@ -30,6 +31,7 @@ const FONTS: { label: string; value: FontFamily }[] = [
 
 export const Settings: React.FC = () => {
   const { theme, setMode, setAccentColor, setFontFamily, resetTheme } = useTheme();
+  const { currentUser, syncStatus, isLoading, error, login, logout, sync, isConfigured } = useCloudSync();
 
   return (
     <div className="flex-1 overflow-auto p-4 sm:p-6 md:p-8 pt-16 md:pt-8">
@@ -153,6 +155,104 @@ export const Settings: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* Cloud Sync Section */}
+        {isConfigured && (
+          <div className="rounded-xl border border-border/50 bg-card text-card-foreground shadow-lg p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-lg bg-primary/10">
+                {currentUser ? (
+                  <Cloud className="h-5 w-5 text-primary" />
+                ) : (
+                  <CloudOff className="h-5 w-5 text-muted-foreground" />
+                )}
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold leading-none tracking-tight">Cloud Sync</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Sync your data across devices with Dexie Cloud
+                </p>
+              </div>
+            </div>
+
+            {error && (
+              <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {currentUser ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Logged in as</p>
+                      <p className="text-sm text-muted-foreground">
+                        {currentUser.email || currentUser.name || 'User'}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={logout}
+                      disabled={isLoading}
+                      className="flex items-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </Button>
+                  </div>
+
+                  {syncStatus && (
+                    <div className="pt-2 border-t border-border">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Sync Status</span>
+                        <span className={cn(
+                          "text-xs px-2 py-1 rounded",
+                          syncStatus.status === 'synced' ? 'bg-green-500/20 text-green-600 dark:text-green-400' :
+                          syncStatus.status === 'syncing' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' :
+                          'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400'
+                        )}>
+                          {syncStatus.status === 'synced' ? 'Synced' :
+                           syncStatus.status === 'syncing' ? 'Syncing...' :
+                           syncStatus.status === 'error' ? 'Error' : 'Pending'}
+                        </span>
+                      </div>
+                      {syncStatus.lastSync && (
+                        <p className="text-xs text-muted-foreground">
+                          Last sync: {new Date(syncStatus.lastSync).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <Button
+                    variant="outline"
+                    onClick={sync}
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+                    {isLoading ? 'Syncing...' : 'Sync Now'}
+                  </Button>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Log in to enable cloud sync and access your data across all your devices.
+                  </p>
+                  <Button
+                    onClick={login}
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    {isLoading ? 'Logging in...' : 'Login to Sync'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Reset Section */}
         <div className="rounded-xl border border-border/50 bg-card text-card-foreground shadow-lg p-6">

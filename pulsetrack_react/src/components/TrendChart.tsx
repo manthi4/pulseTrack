@@ -10,7 +10,7 @@ import { getDateRange, prepareChartData, calculateStats, type DateRange, type Ag
 interface TrendChartProps {
   activities: Activity[];
   sessions: Session[];
-  selectedActivityId?: number;
+  selectedActivityId?: string;
   title?: string;
   className?: string;
   dateRange?: DateRange;
@@ -57,10 +57,10 @@ export const TrendChart: React.FC<TrendChartProps> = ({
   
   const initialSelected = useMemo(() => {
     if (selectedActivityId) return new Set([selectedActivityId]);
-    return new Set(activities.map(a => a.id!).filter(id => id !== undefined));
+    return new Set(activities.map(a => a.sync_id).filter((id): id is string => id !== undefined));
   }, [selectedActivityId, activities]);
 
-  const [visibleActivities, setVisibleActivities] = useState<Set<number>>(initialSelected);
+  const [visibleActivities, setVisibleActivities] = useState<Set<string>>(initialSelected);
 
   useEffect(() => {
     if (selectedActivityId) {
@@ -80,10 +80,10 @@ export const TrendChart: React.FC<TrendChartProps> = ({
     [activities, chartData, aggregation]
   );
 
-  const toggleActivity = (activityId: number) => {
+  const toggleActivity = (activitySyncId: string) => {
     const newSet = new Set(visibleActivities);
-    if (newSet.has(activityId)) newSet.delete(activityId);
-    else newSet.add(activityId);
+    if (newSet.has(activitySyncId)) newSet.delete(activitySyncId);
+    else newSet.add(activitySyncId);
     setVisibleActivities(newSet);
   };
 
@@ -91,7 +91,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({
   const DataComponent = chartType === 'line' ? Line : Area;
 
   const displayedActivities = activities.filter(a => 
-    a.id !== undefined && visibleActivities.has(a.id)
+    a.sync_id && visibleActivities.has(a.sync_id)
   );
 
   const statsToDisplay = selectedActivityId 
@@ -99,9 +99,9 @@ export const TrendChart: React.FC<TrendChartProps> = ({
     : null;
 
   const formatTooltip = (value: number, name: string, props: any) => {
-    const activityId = parseInt(name.replace('activity_', ''));
-    const activity = activities.find(a => a.id === activityId);
-    const stats = activityStats.find(s => s.activityId === activityId);
+    const activitySyncId = name.replace('activity_', '');
+    const activity = activities.find(a => a.sync_id === activitySyncId);
+    const stats = activityStats.find(s => s.activityId === activitySyncId);
     
     let periodGoal = stats?.currentGoal || 0;
     if (activity && props.payload?.periodStart && props.payload?.periodEnd) {
@@ -188,13 +188,13 @@ export const TrendChart: React.FC<TrendChartProps> = ({
         {!selectedActivityId && activities.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {activities.map((activity) => {
-               if (activity.id === undefined) return null;
-               const isSelected = visibleActivities.has(activity.id);
+               if (!activity.sync_id) return null;
+               const isSelected = visibleActivities.has(activity.sync_id);
                const color = activity.color || '#3b82f6';
                return (
                  <button
-                   key={activity.id}
-                   onClick={() => toggleActivity(activity.id!)}
+                   key={activity.sync_id}
+                   onClick={() => toggleActivity(activity.sync_id!)}
                    className={cn(
                      "px-2 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 border",
                      isSelected ? "bg-primary/10 border-primary/20 text-foreground" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted"
@@ -247,13 +247,13 @@ export const TrendChart: React.FC<TrendChartProps> = ({
               {!selectedActivityId && <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />}
               
               {displayedActivities.map((activity) => {
-                if (activity.id === undefined) return null;
-                const dataKey = `activity_${activity.id}`;
+                if (!activity.sync_id) return null;
+                const dataKey = `activity_${activity.sync_id}`;
                 const color = activity.color || '#3b82f6';
-                const stats = activityStats.find(s => s.activityId === activity.id);
+                const stats = activityStats.find(s => s.activityId === activity.sync_id);
                 
                 return (
-                  <React.Fragment key={activity.id}>
+                  <React.Fragment key={activity.sync_id}>
                     {selectedActivityId && stats && stats.currentGoal > 0 && (
                       <ReferenceLine 
                         y={stats.currentGoal} 

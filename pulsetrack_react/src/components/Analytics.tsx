@@ -49,10 +49,10 @@ export const Analytics: React.FC<AnalyticsProps> = ({
 
     // 1. Goal Achievement Analysis
     const goalAchievements = activities.map(activity => {
-      if (activity.id === undefined) return null;
+      if (!activity.sync_id) return null;
       
       const activitySessions = relevantSessions.filter(s => 
-        s.activity_ids.includes(activity.id!)
+        s.activity_ids.includes(activity.sync_id!)
       );
       
       const totalHours = activitySessions.reduce((sum, s) => {
@@ -118,7 +118,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
     // 2. Consistency Analysis (coefficient of variation)
     const consistencyScores = goalAchievements.map(item => {
       const activitySessions = relevantSessions.filter(s => 
-        s.activity_ids.includes(item.activity.id!)
+        s.activity_ids.includes(item.activity.sync_id!)
       );
 
       if (activitySessions.length < 2) {
@@ -228,8 +228,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({
       , { ids: '', count: 0 });
 
     if (topCombination.count > 0) {
-      const activityNames = topCombination.ids.split(',').map(id => {
-        const activity = activities.find(a => a.id === parseInt(id));
+      const activityNames = topCombination.ids.split(',').map(syncId => {
+        const activity = activities.find(a => a.sync_id === syncId);
         return activity?.name || 'Unknown';
       }).join(' + ');
 
@@ -268,7 +268,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
 
     // 8. Longest Streak
     const activityStreaks = activities
-      .filter(a => a.id !== undefined)
+      .filter(a => a.sync_id)
       .map(activity => ({
         activity,
         streak: calculateActivityStreak(activity, sessions)

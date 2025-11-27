@@ -29,7 +29,7 @@ function App() {
   } = useAppData();
 
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
-  const [selectedActivityId, setSelectedActivityId] = useState<number | null>(null);
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
 
   const handleReset = async () => {
     if (await resetData()) {

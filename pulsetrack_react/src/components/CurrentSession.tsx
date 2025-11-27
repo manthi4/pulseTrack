@@ -26,7 +26,7 @@ interface TimerState {
   countdownSeconds: number;
   sessionStartTime: number | null;
   sessionName: string;
-  selectedActivityIds: number[];
+  selectedActivityIds: string[];
 }
 
 export const CurrentSession: React.FC<CurrentSessionProps> = ({
@@ -58,7 +58,7 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
   const initialState = loadTimerState();
 
   const [timerType, setTimerType] = useState<TimerType>(initialState.timerType || 'stopwatch');
-  const [selectedActivityIds, setSelectedActivityIds] = useState<number[]>(initialState.selectedActivityIds || []);
+  const [selectedActivityIds, setSelectedActivityIds] = useState<string[]>(initialState.selectedActivityIds || []);
   const [sessionName, setSessionName] = useState(initialState.sessionName || '');
 
   // Countdown timer state
@@ -462,9 +462,9 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
   };
 
-  const toggleActivity = (id: number) => {
+  const toggleActivity = (syncId: string) => {
     setSelectedActivityIds(prev =>
-      prev.includes(id) ? prev.filter(aid => aid !== id) : [...prev, id]
+      prev.includes(syncId) ? prev.filter(aid => aid !== syncId) : [...prev, syncId]
     );
   };
 
@@ -509,11 +509,11 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
             ) : (
               activities.map(activity => {
                 const color = activity.color || '#3b82f6';
-                const isSelected = activity.id && selectedActivityIds.includes(activity.id);
+                const isSelected = activity.sync_id && selectedActivityIds.includes(activity.sync_id);
                 return (
                   <button
-                    key={activity.id}
-                    onClick={() => activity.id && !isRunning && toggleActivity(activity.id)}
+                    key={activity.sync_id}
+                    onClick={() => activity.sync_id && !isRunning && toggleActivity(activity.sync_id)}
                     disabled={isRunning}
                     className={`px-3 py-1.5 rounded-full text-sm border transition-all ${isSelected
                       ? 'shadow-md'

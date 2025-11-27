@@ -9,8 +9,8 @@ interface ActivityGridProps {
   sessions: Session[];
   timePeriod: TimePeriod;
   selectedDate: Date;
-  onSelectActivity: (id: number) => void;
-  onDeleteActivity: (id: number) => void;
+  onSelectActivity: (syncId: string) => void;
+  onDeleteActivity: (syncId: string) => void;
   onCreateActivity: () => void;
 }
 
@@ -27,9 +27,9 @@ export function ActivityGrid({
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {activities.map(activity => (
         <div 
-          key={activity.id} 
+          key={activity.sync_id} 
           className="rounded-xl border border-border/50 bg-card text-card-foreground shadow-lg p-4 relative group cursor-pointer hover:shadow-xl hover:shadow-primary/5 transition-all hover:border-primary/20"
-          onClick={() => onSelectActivity(activity.id!)}
+          onClick={() => activity.sync_id && onSelectActivity(activity.sync_id)}
         >
             <div className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
                  <Button 
@@ -38,7 +38,7 @@ export function ActivityGrid({
                     className="h-8 w-8"
                     onClick={(e) => { 
                       e.stopPropagation(); 
-                      onDeleteActivity(activity.id!); 
+                      activity.sync_id && onDeleteActivity(activity.sync_id); 
                     }}
                   >
                    <Trash2 className="h-4 w-4 text-destructive" />

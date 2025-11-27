@@ -8,9 +8,9 @@ import { X } from 'lucide-react';
 interface LogSessionDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => void;
+  onSave: (session: Omit<Session, 'sync_id' | 'id' | 'updated_at' | 'deleted_at'>) => void;
   activities: Activity[];
-  initialActivityId?: number | null;
+  initialActivityId?: string | null;
   editingSession?: Session | null;
   initialStartTime?: number | null;
   initialEndTime?: number | null;
@@ -31,7 +31,7 @@ export const LogSessionDialog: React.FC<LogSessionDialogProps> = ({
   const [name, setName] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [selectedActivityIds, setSelectedActivityIds] = useState<number[]>([]);
+  const [selectedActivityIds, setSelectedActivityIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -77,9 +77,9 @@ export const LogSessionDialog: React.FC<LogSessionDialogProps> = ({
     onClose();
   };
 
-  const toggleActivity = (id: number) => {
+  const toggleActivity = (syncId: string) => {
     setSelectedActivityIds(prev =>
-      prev.includes(id) ? prev.filter(aid => aid !== id) : [...prev, id]
+      prev.includes(syncId) ? prev.filter(aid => aid !== syncId) : [...prev, syncId]
     );
   };
 
@@ -123,11 +123,11 @@ export const LogSessionDialog: React.FC<LogSessionDialogProps> = ({
             <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto border p-2 rounded-md">
               {activities.map(activity => {
                 const color = activity.color || '#3b82f6';
-                const isSelected = activity.id && selectedActivityIds.includes(activity.id);
+                const isSelected = activity.sync_id && selectedActivityIds.includes(activity.sync_id);
                 return (
                   <button
-                    key={activity.id}
-                    onClick={() => activity.id && toggleActivity(activity.id)}
+                    key={activity.sync_id}
+                    onClick={() => activity.sync_id && toggleActivity(activity.sync_id)}
                     className={`px-3 py-1 rounded-full text-sm border transition-all ${isSelected
                         ? 'shadow-md'
                         : 'hover:opacity-80'

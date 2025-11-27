@@ -7,7 +7,7 @@ import { Button } from './ui/Button';
 interface SessionListProps {
   sessions: Session[];
   activities: Activity[];
-  onDeleteSession: (id: number) => void;
+  onDeleteSession: (syncId: string) => void;
   onLogSession: () => void;
   onEditSession: (session: Session) => void;
   onDuplicateSession?: (session: Session) => void;
@@ -29,12 +29,12 @@ export const SessionList: React.FC<SessionListProps> = ({
   onDuplicateSession
 }) => {
   const activityMap = useMemo(() => {
-    const map = new Map<number, Activity>();
-    activities.forEach(a => { if (a.id !== undefined) map.set(a.id, a); });
+    const map = new Map<string, Activity>();
+    activities.forEach(a => { if (a.sync_id) map.set(a.sync_id, a); });
     return map;
   }, [activities]);
 
-  const getActivity = (id: number) => activityMap.get(id);
+  const getActivity = (syncId: string) => activityMap.get(syncId);
 
   return (
     <div className="space-y-4">
@@ -54,7 +54,7 @@ export const SessionList: React.FC<SessionListProps> = ({
         )}
 
         {sessions.map((session) => (
-          <div key={session.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg border bg-card text-card-foreground shadow-sm gap-3">
+          <div key={session.sync_id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg border bg-card text-card-foreground shadow-sm gap-3">
             <div className="space-y-1 flex-1 min-w-0">
               <div className="font-semibold flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                 <span className="truncate">{session.name}</span>
@@ -66,12 +66,12 @@ export const SessionList: React.FC<SessionListProps> = ({
                 {format(session.start_time, 'PP p')}
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
-                {session.activity_ids.map(id => {
-                  const activity = getActivity(id);
+                {session.activity_ids.map(syncId => {
+                  const activity = getActivity(syncId);
                   const color = activity?.color || '#3b82f6';
                   return (
                     <span 
-                      key={id} 
+                      key={syncId} 
                       className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:opacity-80"
                       style={{
                         borderColor: `${color}40`,
@@ -91,10 +91,10 @@ export const SessionList: React.FC<SessionListProps> = ({
                   <Copy className="h-4 w-4 text-muted-foreground hover:text-primary" />
                 </Button>
               )}
-              <Button variant="ghost" size="icon" onClick={() => session.id && onEditSession(session)} title="Edit session">
+              <Button variant="ghost" size="icon" onClick={() => onEditSession(session)} title="Edit session">
                 <Edit className="h-4 w-4 text-muted-foreground hover:text-primary" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => session.id && onDeleteSession(session.id)} title="Delete session">
+              <Button variant="ghost" size="icon" onClick={() => session.sync_id && onDeleteSession(session.sync_id)} title="Delete session">
                 <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
               </Button>
             </div>
