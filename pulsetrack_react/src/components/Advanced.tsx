@@ -213,7 +213,7 @@ export const Advanced: React.FC<AdvancedProps> = ({ activities, sessions, refres
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-8 pb-24 sm:pb-8">
+    <div className="h-full overflow-auto p-4 sm:p-6 lg:p-8 space-y-8 pb-24 sm:pb-8">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">Advanced</h1>
         <p className="text-sm sm:text-base text-muted-foreground">
