@@ -210,24 +210,24 @@ export const Settings: React.FC = () => {
                     </Button>
                   </div>
 
-                  {syncStatus && syncStatus.status && (
+                  {syncStatus && (syncStatus as any).status && (
                     <div className="pt-2 border-t border-border">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium">Sync Status</span>
                         <span className={cn(
                           "text-xs px-2 py-1 rounded",
-                          syncStatus.status === 'synced' ? 'bg-green-500/20 text-green-600 dark:text-green-400' :
-                          syncStatus.status === 'syncing' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' :
+                          (syncStatus as any).status === 'synced' ? 'bg-green-500/20 text-green-600 dark:text-green-400' :
+                          (syncStatus as any).status === 'syncing' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' :
                           'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400'
                         )}>
-                          {syncStatus.status === 'synced' ? 'Synced' :
-                           syncStatus.status === 'syncing' ? 'Syncing...' :
-                           syncStatus.status === 'error' ? 'Error' : 'Pending'}
+                          {(syncStatus as any).status === 'synced' ? 'Synced' :
+                           (syncStatus as any).status === 'syncing' ? 'Syncing...' :
+                           (syncStatus as any).status === 'error' ? 'Error' : 'Pending'}
                         </span>
                       </div>
-                      {syncStatus.lastSync && (
+                      {(syncStatus as any).lastSync && (
                         <p className="text-xs text-muted-foreground">
-                          Last sync: {new Date(syncStatus.lastSync).toLocaleString()}
+                          Last sync: {new Date((syncStatus as any).lastSync).toLocaleString()}
                         </p>
                       )}
                     </div>

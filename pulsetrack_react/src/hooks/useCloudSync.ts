@@ -10,15 +10,13 @@ export function useCloudSync() {
   // Check if cloud is configured
   // Check if cloud addon is available and database URL is configured
   const envDbUrl = import.meta.env.VITE_DEXIE_CLOUD_DB_URL;
-  const cloudDbUrl = db.cloud?.databaseUrl;
-  const isConfigured = !!(db.cloud && (envDbUrl || cloudDbUrl));
+  const isConfigured = !!(db.cloud && envDbUrl);
   
   // Debug logging (only in development)
   if (import.meta.env.DEV && !isConfigured) {
     console.debug('Dexie Cloud not configured:', {
       hasCloud: !!db.cloud,
-      envDbUrl: envDbUrl ? 'set' : 'not set',
-      cloudDbUrl: cloudDbUrl ? 'set' : 'not set'
+      envDbUrl: envDbUrl ? 'set' : 'not set'
     });
   }
 

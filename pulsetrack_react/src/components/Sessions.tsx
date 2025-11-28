@@ -286,7 +286,7 @@ export const Sessions: React.FC<SessionsProps> = ({
 
               <div className="grid gap-4">
                 {paginatedSessions.map((session) => {
-                  const isSelected = session.sync_id && selectedSessionIds.has(session.sync_id);
+                  const isSelected = !!(session.sync_id && selectedSessionIds.has(session.sync_id));
                   return (
                     <div
                       key={session.sync_id}
