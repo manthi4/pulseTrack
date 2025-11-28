@@ -35,13 +35,25 @@ class PulseTrackDatabase extends Dexie {
     super('pulsetrack-db', { addons: [dexieCloud] });
     
     // Configure Dexie Cloud
-    // The database URL will be set from environment variable or dexie-cloud.json
+    // The database URL should be set via VITE_DEXIE_CLOUD_DB_URL in .env.local
+    // Get the URL from dexie-cloud.json: dbUrl field
     const dbUrl = import.meta.env.VITE_DEXIE_CLOUD_DB_URL;
+    
     if (dbUrl) {
       this.cloud.configure({
         databaseUrl: dbUrl,
         requireAuth: false, // Set to true if you want to require authentication
+        // requireAuth: false allows local use without login, but sync requires authentication
       });
+    } else if (import.meta.env.DEV) {
+      console.warn(
+        'Dexie Cloud: No database URL configured.\n' +
+        'To enable sync:\n' +
+        '1. Create .env.local in pulsetrack_react/\n' +
+        '2. Add: VITE_DEXIE_CLOUD_DB_URL=https://your-database.dexie.cloud\n' +
+        '3. Get the URL from dexie-cloud.json (dbUrl field)\n' +
+        '4. Restart your dev server'
+      );
     }
 
     // Version 1: Initial schema

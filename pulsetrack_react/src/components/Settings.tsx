@@ -188,7 +188,15 @@ export const Settings: React.FC = () => {
                     <div>
                       <p className="font-medium">Logged in as</p>
                       <p className="text-sm text-muted-foreground">
-                        {currentUser.email || currentUser.name || 'User'}
+                        {(() => {
+                          const email = currentUser?.email;
+                          const name = currentUser?.name;
+                          // Handle "unauthorized" or invalid states
+                          if (name && name.toLowerCase().includes('unauthorized')) {
+                            return 'Not authenticated';
+                          }
+                          return email || (name && name !== 'unauthorized' ? name : 'User');
+                        })()}
                       </p>
                     </div>
                     <Button
@@ -198,11 +206,11 @@ export const Settings: React.FC = () => {
                       className="flex items-center gap-2"
                     >
                       <LogOut className="h-4 w-4" />
-                      Logout
+                      {isLoading ? 'Logging out...' : 'Logout'}
                     </Button>
                   </div>
 
-                  {syncStatus && (
+                  {syncStatus && syncStatus.status && (
                     <div className="pt-2 border-t border-border">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium">Sync Status</span>
@@ -238,7 +246,7 @@ export const Settings: React.FC = () => {
               ) : (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    Log in to enable cloud sync and access your data across all your devices.
+                    Your data is stored locally and works offline. Log in to enable cloud sync and access your data across all your devices.
                   </p>
                   <Button
                     onClick={login}

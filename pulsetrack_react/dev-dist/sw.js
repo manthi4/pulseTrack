@@ -85,7 +85,7 @@ define(['./workbox-959db468'], (function (workbox) { 'use strict';
     "revision": "fe1b6e4703596273662c7afc1ee3df9b"
   }, {
     "url": "/pulseTrack/index.html",
-    "revision": "0.3jdav6jqaok"
+    "revision": "0.uga02ug1j58"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/pulseTrack/index.html"), {
