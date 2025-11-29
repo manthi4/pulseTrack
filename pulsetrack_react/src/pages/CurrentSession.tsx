@@ -4,7 +4,6 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 // import { Select } from '../components/ui/Select';
 import { LogSessionDialog } from '../components/LogSessionDialog';
-import { ActivityBadge } from '../components/ui/ActivityBadge';
 import { type Activity } from '../lib/db';
 
 interface CurrentSessionProps {
@@ -26,8 +25,6 @@ interface TimerState {
   countdownMinutes: number;
   countdownSeconds: number;
   sessionStartTime: number | null;
-  sessionName: string;
-  selectedActivityIds: string[];
 }
 
 export const CurrentSession: React.FC<CurrentSessionProps> = ({
@@ -59,8 +56,6 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
   const initialState = loadTimerState();
 
   const [timerType, setTimerType] = useState<TimerType>(initialState.timerType || 'stopwatch');
-  const [selectedActivityIds, setSelectedActivityIds] = useState<string[]>(initialState.selectedActivityIds || []);
-  const [sessionName, setSessionName] = useState(initialState.sessionName || '');
 
   // Countdown timer state
   const [countdownHours, setCountdownHours] = useState(initialState.countdownHours || 0);
@@ -187,8 +182,6 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
       countdownMinutes,
       countdownSeconds,
       sessionStartTime,
-      sessionName,
-      selectedActivityIds,
     });
   }, [
     timerType,
@@ -200,8 +193,6 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
     countdownMinutes,
     countdownSeconds,
     sessionStartTime,
-    sessionName,
-    selectedActivityIds,
     saveTimerState,
   ]);
 
@@ -248,9 +239,7 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
   const showTimerNotification = () => {
     if ('Notification' in window && Notification.permission === 'granted') {
       const notificationTitle = 'Timer Complete!';
-      const notificationBody = sessionName
-        ? `Your session "${sessionName}" timer has finished.`
-        : 'Your timer has finished.';
+      const notificationBody = 'Your timer has finished.';
 
       new Notification(notificationTitle, {
         body: notificationBody,
@@ -284,7 +273,7 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
       playTimerSound();
       showTimerNotification();
     }
-  }, [sessionStartTime, sessionName]);
+  }, [sessionStartTime]);
 
   // Initialize countdown time when timer type or duration changes (but not when pausing)
   // Use a ref to track previous values to detect actual changes
@@ -402,11 +391,6 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
         setInitialRemainingTime(totalMs);
       }
     }
-    if (selectedActivityIds.length === 0) {
-      alert('Please select at least one activity.');
-      return;
-    }
-
     const now = Date.now();
     setIsRunning(true);
     setTimerStartTimestamp(now);
@@ -459,10 +443,15 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
     onAddSession(session);
     setShowSaveDialog(false);
     handleReset();
-    setSessionName('');
-    setSelectedActivityIds([]);
+    handleReset();
     // Clear localStorage after saving
     localStorage.removeItem(STORAGE_KEY);
+  };
+
+  const actualElapsedTime = (): number => {
+    return timerType === 'stopwatch' 
+      ? elapsedTime 
+      : ((countdownHours * 3600 + countdownMinutes * 60 + countdownSeconds) * 1000 - remainingTime);
   };
 
   const formatTime = (ms: number): string => {
@@ -478,11 +467,6 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
   };
 
-  const toggleActivity = (syncId: string) => {
-    setSelectedActivityIds(prev =>
-      prev.includes(syncId) ? prev.filter(aid => aid !== syncId) : [...prev, syncId]
-    );
-  };
 
   const displayTime = timerType === 'stopwatch' ? elapsedTime : remainingTime;
 
@@ -503,47 +487,9 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Current Session</h1>
 
-        {/* Session Name */}
-        <div className="mb-6">
-          <label className="text-sm font-medium block mb-2">Session Name</label>
-          <Input
-            value={sessionName}
-            onChange={(e) => setSessionName(e.target.value)}
-            placeholder="e.g. Morning Workout"
-            disabled={isRunning}
-          />
-        </div>
-
-        {/* Activity Selection */}
-        <div className="mb-6">
-          <label className="text-sm font-medium block mb-2">
-            Select Activities <span className="text-destructive">*</span>
-          </label>
-          <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto border p-3 rounded-md bg-card">
-            {activities.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No activities available. Create activities in the Advanced page.</p>
-            ) : (
-              activities.map(activity => {
-                const isSelected = activity.sync_id && selectedActivityIds.includes(activity.sync_id);
-                return (
-                  <ActivityBadge
-                    key={activity.sync_id}
-                    name={activity.name}
-                    color={activity.color}
-                    isSelected={!!isSelected}
-                    onClick={() => activity.sync_id && !isRunning && toggleActivity(activity.sync_id)}
-                    className={isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                    size="md"
-                  />
-                );
-              })
-            )}
-          </div>
-        </div>
 
         {/* Timer Type Selection */}
         <div className="mb-6">
-          <label className="text-sm font-medium block mb-2">Timer Type</label>
           <div
             className={`relative inline-flex bg-card border border-border rounded-lg p-1 ${isRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
             style={{ width: 'fit-content' }}
@@ -637,8 +583,8 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
                 handleStart();
               }
             }}
-            disabled={!isRunning && (selectedActivityIds.length === 0 || (timerType === 'countdown' && remainingTime <= 0))}
-            className={`w-full bg-card border-2 border-border rounded-lg p-8 sm:p-12 text-center transition-all ${selectedActivityIds.length === 0 || (timerType === 'countdown' && remainingTime <= 0 && !isRunning)
+            disabled={!isRunning && (timerType === 'countdown' && remainingTime <= 0)}
+            className={`w-full bg-card border-2 border-border rounded-lg p-8 sm:p-12 text-center transition-all ${(timerType === 'countdown' && remainingTime <= 0 && !isRunning)
               ? 'opacity-50 cursor-not-allowed'
               : 'hover:border-primary hover:shadow-lg cursor-pointer'
               }`}
@@ -652,7 +598,7 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
             {timerType === 'countdown' && remainingTime <= 0 && !isRunning && (
               <p className="text-muted-foreground text-sm">Timer completed</p>
             )}
-            {!isRunning && selectedActivityIds.length > 0 && !(timerType === 'countdown' && remainingTime <= 0) && (
+            {!isRunning && !(timerType === 'countdown' && remainingTime <= 0) && (
               <Play className="h-12 w-12 mx-auto mt-4 text-primary" />
             )}
             {isRunning && (
@@ -693,10 +639,10 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
             onClose={() => setShowSaveDialog(false)}
             onSave={handleSaveSession}
             activities={activities}
-            initialActivityId={selectedActivityIds[0] || null}
+            initialActivityId={null}
             initialStartTime={sessionStartTime}
-            initialEndTime={Date.now()}
-            initialName={sessionName}
+            initialEndTime={sessionStartTime + actualElapsedTime()}
+            initialName={''}
           />
         )}
       </div>
