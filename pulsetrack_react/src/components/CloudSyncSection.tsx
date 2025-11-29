@@ -4,6 +4,7 @@ import { Button } from './ui/Button';
 import { useCloudSync } from '../hooks/useCloudSync';
 import { formatUserDisplay, getSyncStatusText, getSyncStatusBadgeClasses, type SyncStatus } from '../lib/authUtils';
 import { cn } from '../lib/utils';
+import { PageSection } from './ui/PageSection';
 
 export const CloudSyncSection: React.FC = () => {
   const { currentUser, syncStatus, isLoading, isSyncing, error, login, logout, sync, isConfigured } = useCloudSync();
@@ -13,22 +14,12 @@ export const CloudSyncSection: React.FC = () => {
   }
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card text-card-foreground shadow-lg p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 rounded-lg bg-primary/10">
-          {currentUser ? (
-            <Cloud className="h-5 w-5 text-primary" />
-          ) : (
-            <CloudOff className="h-5 w-5 text-muted-foreground" />
-          )}
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold leading-none tracking-tight">Cloud Sync</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Sync your data across devices with Dexie Cloud
-          </p>
-        </div>
-      </div>
+    <PageSection
+      icon={currentUser ? Cloud : CloudOff}
+      title="Cloud Sync"
+      description="Sync your data across devices with Dexie Cloud"
+      iconBgColor={currentUser ? 'primary' : 'muted'}
+    >
 
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
@@ -102,7 +93,7 @@ export const CloudSyncSection: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </PageSection>
   );
 };
 

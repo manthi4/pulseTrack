@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { type Activity, type Session } from '../lib/db';
 import { Button } from './ui/Button';
+import { Card } from './ui/Card';
 import { cn } from '../lib/utils';
 import { BarChart3, TrendingUp } from 'lucide-react';
 import { calculatePeriodGoal, normalizePeriod } from '../lib/dateUtils';
@@ -121,7 +122,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({
   };
 
   return (
-    <div className={cn("rounded-xl border border-border/50 bg-card text-card-foreground shadow-lg p-6", className)}>
+    <Card className={className}>
       <div className="mb-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
           <h3 className="font-semibold leading-none tracking-tight text-xl">{title}</h3>
@@ -286,6 +287,6 @@ export const TrendChart: React.FC<TrendChartProps> = ({
           No data to display
         </div>
       )}
-    </div>
+    </Card>
   );
 };

@@ -5,6 +5,7 @@ import { TrendChart } from './TrendChart';
 import { ActivityGrid } from './ActivityGrid';
 import { SessionList } from './SessionList';
 import { Button } from './ui/Button';
+import { PageSection } from './ui/PageSection';
 import { LogSessionDialog } from './LogSessionDialog';
 import { ActivityDialog } from './ActivityDialog';
 import { type Activity, type Session } from '../lib/db';
@@ -156,8 +157,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 Edit Activity
               </Button>
             </div>
-            <div className="rounded-xl border border-border/50 bg-card text-card-foreground shadow-lg p-6">
-              <h3 className="font-semibold leading-none tracking-tight mb-4">Progress</h3>
+            <PageSection title="Progress" variant="compact">
               <ProgressBar
                 activity={selectedActivity}
                 sessions={sessions}
@@ -165,15 +165,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 selectedDate={selectedDate}
                 showPeriodLabel={true}
               />
-            </div>
+            </PageSection>
 
             {/* Streak Display */}
             {streak && (
-              <div className="rounded-xl border border-border/50 bg-card text-card-foreground shadow-lg p-6">
-                <h3 className="font-semibold leading-none tracking-tight mb-4 flex items-center gap-2">
-                  <Flame className="h-5 w-5 text-orange-500" />
-                  Streaks
-                </h3>
+              <PageSection 
+                icon={Flame} 
+                title="Streaks" 
+                iconBgColor="warning"
+                variant="compact"
+              >
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">Current Streak</p>
@@ -188,7 +189,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     </p>
                   </div>
                 </div>
-              </div>
+              </PageSection>
             )}
             <div>
               <TrendChart

@@ -19,17 +19,11 @@ export function useAppData() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadData = useCallback(async (skipSeed = false) => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       let acts = await getActivities();
       let sess = await getSessions();
-      
-      if (acts.length === 0 && !skipSeed) {
-        await seedDB();
-        acts = await getActivities();
-        sess = await getSessions();
-      }
       
       setActivities(acts);
       setSessions(sess);

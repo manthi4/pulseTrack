@@ -3,7 +3,8 @@ import { type Activity, type Session } from '../lib/db';
 import { formatDateTimeLocal } from '../lib/dateUtils';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { X } from 'lucide-react';
+import { Dialog } from './ui/Dialog';
+import { FormField } from './ui/FormField';
 
 interface LogSessionDialogProps {
   isOpen: boolean;
@@ -57,8 +58,6 @@ export const LogSessionDialog: React.FC<LogSessionDialogProps> = ({
     }
   }, [isOpen, initialActivityId, editingSession, initialStartTime, initialEndTime, initialName]);
 
-  if (!isOpen) return null;
-
   const handleSave = () => {
     if (!name || !startTime || !endTime || selectedActivityIds.length === 0) {
       alert("Please fill in all fields and select at least one activity.");
@@ -84,74 +83,72 @@ export const LogSessionDialog: React.FC<LogSessionDialogProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-lg bg-card p-4 sm:p-6 shadow-xl border border-border/50 text-card-foreground max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">{editingSession ? 'Edit Session' : 'Log Session'}</h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
+    <Dialog
+      isOpen={isOpen}
+      onClose={onClose}
+      title={editingSession ? 'Edit Session' : 'Log Session'}
+      footer={
+        <>
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+            Cancel
           </Button>
-        </div>
+          <Button onClick={handleSave} className="w-full sm:w-auto">
+            {editingSession ? 'Update Session' : 'Save Session'}
+          </Button>
+        </>
+      }
+    >
+      <FormField label="Session Name" required>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g. Morning Jog"
+        />
+      </FormField>
 
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Session Name</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Morning Jog" />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Start Time</label>
-              <Input
-                type="datetime-local"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">End Time</label>
-              <Input
-                type="datetime-local"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium block mb-2">Activities</label>
-            <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto border p-2 rounded-md">
-              {activities.map(activity => {
-                const color = activity.color || '#3b82f6';
-                const isSelected = activity.sync_id && selectedActivityIds.includes(activity.sync_id);
-                return (
-                  <button
-                    key={activity.sync_id}
-                    onClick={() => activity.sync_id && toggleActivity(activity.sync_id)}
-                    className={`px-3 py-1 rounded-full text-sm border transition-all ${isSelected
-                        ? 'shadow-md'
-                        : 'hover:opacity-80'
-                      }`}
-                    style={{
-                      backgroundColor: isSelected ? color : `${color}15`,
-                      borderColor: isSelected ? color : `${color}40`,
-                      color: isSelected ? 'white' : color,
-                    }}
-                  >
-                    {activity.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">Cancel</Button>
-            <Button onClick={handleSave} className="w-full sm:w-auto">{editingSession ? 'Update Session' : 'Save Session'}</Button>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <FormField label="Start Time" required>
+          <Input
+            type="datetime-local"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+          />
+        </FormField>
+        <FormField label="End Time" required>
+          <Input
+            type="datetime-local"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+          />
+        </FormField>
       </div>
-    </div>
+
+      <FormField label="Activities" required>
+        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto border p-2 rounded-md">
+          {activities.map(activity => {
+            const color = activity.color || '#3b82f6';
+            const isSelected = activity.sync_id && selectedActivityIds.includes(activity.sync_id);
+            return (
+              <button
+                key={activity.sync_id}
+                onClick={() => activity.sync_id && toggleActivity(activity.sync_id)}
+                className={`px-3 py-1 rounded-full text-sm border transition-all ${isSelected
+                    ? 'shadow-md'
+                    : 'hover:opacity-80'
+                  }`}
+                style={{
+                  backgroundColor: isSelected ? color : `${color}15`,
+                  borderColor: isSelected ? color : `${color}40`,
+                  color: isSelected ? 'white' : color,
+                }}
+              >
+                {activity.name}
+              </button>
+            );
+          })}
+        </div>
+      </FormField>
+    </Dialog>
   );
 };
 

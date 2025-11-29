@@ -6,6 +6,7 @@ import { format, getDay, getHours } from 'date-fns';
 import { TrendingUp, TrendingDown, Target, Award, Clock, Calendar, Activity as ActivityIcon, Flame } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { calculateActivityStreak } from '../lib/activityUtils';
+import { Card } from './ui/Card';
 
 interface AnalyticsProps {
   activities: Activity[];
@@ -300,7 +301,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
   }
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card text-card-foreground shadow-lg p-6">
+    <Card>
       <h3 className="font-semibold leading-none tracking-tight text-xl mb-6">Analytics</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -343,7 +344,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 };
 

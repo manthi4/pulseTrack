@@ -5,6 +5,7 @@ import { Trash2, Clock, Plus, Edit, Search, Filter, ChevronLeft, ChevronRight, C
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
+import { PageSection } from './ui/PageSection';
 import { LogSessionDialog } from './LogSessionDialog';
 import { cn } from '../lib/utils';
 
@@ -184,10 +185,14 @@ export const Sessions: React.FC<SessionsProps> = ({
         </div>
 
         {/* Filters */}
-        <div className="rounded-xl border border-border/50 bg-card p-4 space-y-4">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <h2 className="font-semibold text-sm">Filters</h2>
+        <PageSection 
+          icon={Filter} 
+          title="Filters" 
+          iconBgColor="muted"
+          variant="compact"
+          padding="sm"
+        >
+          <div className="flex items-center justify-between mb-4">
             {hasActiveFilters && (
               <Button
                 variant="ghost"
@@ -241,7 +246,7 @@ export const Sessions: React.FC<SessionsProps> = ({
               onChange={(e) => setDateRangeEnd(e.target.value)}
             />
           </div>
-        </div>
+        </PageSection>
 
         {/* Bulk Actions */}
         {selectedSessionIds.size > 0 && (
