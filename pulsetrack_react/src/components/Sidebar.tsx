@@ -117,7 +117,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-4 border-b border-border/50 flex items-center justify-between">
         {!isCollapsed && (
           <h1
-            className="text-xl font-bold cursor-pointer bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+            className="text-2xl md:text-xl font-bold cursor-pointer bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hover:opacity-80 transition-opacity"
             onClick={() => {
               onSelectActivity(null);
               mobileMenu?.closeMobileMenu();
@@ -148,7 +148,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 currentPage === item.id
                   ? "bg-primary/10 text-primary font-medium"
                   : "hover:bg-accent text-foreground",
-                isCollapsed ? "justify-center p-2" : "text-left px-4 py-2 gap-3"
+                isCollapsed ? "justify-center p-2" : "text-left px-4 py-2 gap-3",
+                "text-lg md:text-sm" // Larger text on mobile
               )}
               title={item.label}
             >
@@ -167,7 +168,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             mobileMenu?.closeMobileMenu();
           }}
           className={cn(
-            "w-full transition-colors",
+            "w-full transition-colors text-base md:text-sm",
             isCollapsed ? "justify-center p-2" : "justify-start px-4 py-2 gap-2"
           )}
           title="Dev Area"
@@ -189,7 +190,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   await promptInstall();
                   mobileMenu?.closeMobileMenu();
                 }}
-                className="w-full transition-colors justify-start px-4 py-2 gap-2 text-primary hover:text-primary"
+                className="w-full transition-colors justify-start px-4 py-2 gap-2 text-primary hover:text-primary text-base md:text-sm"
                 title="Install PWA"
               >
                 <Download className="h-4 w-4" />
@@ -203,7 +204,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   await tryManualInstall();
                   mobileMenu?.closeMobileMenu();
                 }}
-                className="w-full transition-colors justify-start px-4 py-2 gap-2"
+                className="w-full transition-colors justify-start px-4 py-2 gap-2 text-base md:text-sm"
                 title="Try Install (Debug)"
               >
                 <Download className="h-4 w-4" />
@@ -211,7 +212,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </Button>
             )}
             {isInstalled && (
-              <div className="px-4 py-2 text-sm text-muted-foreground">
+              <div className="px-4 py-2 text-base md:text-sm text-muted-foreground">
                 ✓ App Installed
               </div>
             )}
@@ -224,7 +225,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <Button
               variant="outline"
               onClick={handleDeleteAllData}
-              className="w-full transition-colors justify-start px-4 py-2 gap-2 text-destructive hover:text-destructive"
+              className="w-full transition-colors justify-start px-4 py-2 gap-2 text-destructive hover:text-destructive text-base md:text-sm"
               title="Delete All Data"
             >
               <Trash2 className="h-4 w-4" />
@@ -236,11 +237,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onReset();
                 mobileMenu?.closeMobileMenu();
               }}
-              className="w-full transition-colors justify-start px-4 py-2 gap-2"
+              className="w-full transition-colors justify-start px-4 py-2 gap-2 text-base md:text-sm"
               title="Reset Data"
             >
               <RotateCcw className="h-4 w-4" />
-              <span>Reset Data</span>
+              <span>Reset Mock Data</span>
             </Button>
           </div>
         )}

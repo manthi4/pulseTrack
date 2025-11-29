@@ -1,17 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  getActivities, 
-  getSessions, 
-  createSession, 
+import {
+  getActivities,
+  getSessions,
+  createSession,
   updateSession,
-  deleteSession, 
+  deleteSession,
   createActivity,
   deleteActivity,
   updateActivity,
-  seedDB, 
   resetDB,
-  type Activity, 
-  type Session 
+  type Activity,
+  type Session
 } from '../lib/db';
 
 export function useAppData() {
@@ -24,7 +23,7 @@ export function useAppData() {
       setLoading(true);
       let acts = await getActivities();
       let sess = await getSessions();
-      
+
       setActivities(acts);
       setSessions(sess);
     } catch (error) {
@@ -44,20 +43,20 @@ export function useAppData() {
     await loadData();
   }, [loadData]);
 
-  const addSession = useCallback((session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) => 
+  const addSession = useCallback((session: Omit<Session, 'id' | 'sync_id' | 'updated_at' | 'deleted_at'>) =>
     withReload(() => createSession(session)), [withReload]);
 
-  const editSession = useCallback((syncId: string, session: Omit<Session, 'sync_id' | 'id' | 'updated_at' | 'deleted_at'>) => 
+  const editSession = useCallback((syncId: string, session: Omit<Session, 'sync_id' | 'id' | 'updated_at' | 'deleted_at'>) =>
     withReload(() => updateSession(syncId, session)), [withReload]);
 
   const removeSession = useCallback(async (syncId: string) => {
     await withReload(() => deleteSession(syncId));
   }, [withReload]);
 
-  const addActivity = useCallback((activity: Omit<Activity, 'sync_id' | 'id' | 'created_at' | 'updated_at' | 'deleted_at'>) => 
+  const addActivity = useCallback((activity: Omit<Activity, 'sync_id' | 'id' | 'created_at' | 'updated_at' | 'deleted_at'>) =>
     withReload(() => createActivity(activity)), [withReload]);
 
-  const editActivity = useCallback((syncId: string, activity: Partial<Omit<Activity, 'sync_id' | 'id' | 'created_at'>>) => 
+  const editActivity = useCallback((syncId: string, activity: Partial<Omit<Activity, 'sync_id' | 'id' | 'created_at'>>) =>
     withReload(() => updateActivity(syncId, activity)), [withReload]);
 
   const removeActivity = useCallback(async (syncId: string) => {
@@ -77,11 +76,11 @@ export function useAppData() {
   }, [withReload]);
 
   const refreshData = useCallback(async () => {
-    await loadData(false);
+    await loadData();
   }, [loadData]);
 
   const refreshDataWithoutSeed = useCallback(async () => {
-    await loadData(true);
+    await loadData();
   }, [loadData]);
 
   return {
