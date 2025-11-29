@@ -1,7 +1,7 @@
 import { Card } from './ui/Card';
-import { DonutChart } from './DonutChart';
+import { DonutChart } from './ui/DonutChart';
 import { type Activity, type Session } from '../lib/db';
-import { type TimePeriod } from './TimePeriodSelector';
+import { type TimePeriod } from '../lib/dateUtils';
 
 interface ActivityCardProps {
     activity: Activity;

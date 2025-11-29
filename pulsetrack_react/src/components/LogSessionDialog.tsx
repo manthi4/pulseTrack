@@ -5,6 +5,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Dialog } from './ui/Dialog';
 import { FormField } from './ui/FormField';
+import { ActivityBadge } from './ui/ActivityBadge';
 
 interface LogSessionDialogProps {
   isOpen: boolean;
@@ -126,24 +127,16 @@ export const LogSessionDialog: React.FC<LogSessionDialogProps> = ({
       <FormField label="Activities" required>
         <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto border p-2 rounded-md">
           {activities.map(activity => {
-            const color = activity.color || '#3b82f6';
             const isSelected = activity.sync_id && selectedActivityIds.includes(activity.sync_id);
             return (
-              <button
+              <ActivityBadge
                 key={activity.sync_id}
+                name={activity.name}
+                color={activity.color}
+                isSelected={!!isSelected}
                 onClick={() => activity.sync_id && toggleActivity(activity.sync_id)}
-                className={`px-3 py-1 rounded-full text-sm border transition-all ${isSelected
-                    ? 'shadow-md'
-                    : 'hover:opacity-80'
-                  }`}
-                style={{
-                  backgroundColor: isSelected ? color : `${color}15`,
-                  borderColor: isSelected ? color : `${color}40`,
-                  color: isSelected ? 'white' : color,
-                }}
-              >
-                {activity.name}
-              </button>
+                size="md"
+              />
             );
           })}
         </div>

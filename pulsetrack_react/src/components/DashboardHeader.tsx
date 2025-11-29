@@ -1,4 +1,5 @@
-import { TimePeriodSelector, type TimePeriod } from './TimePeriodSelector';
+import { TimePeriodSelector } from './ui/TimePeriodSelector';
+import { type TimePeriod } from '../lib/dateUtils';
 
 interface DashboardHeaderProps {
   title: string;

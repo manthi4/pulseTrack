@@ -3,6 +3,7 @@ import { type Activity } from '../lib/db';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Dialog } from './ui/Dialog';
+import { Select } from './ui/Select';
 import { ColorPicker, DEFAULT_COLORS } from './ui/ColorPicker';
 import { FormField } from './ui/FormField';
 
@@ -86,8 +87,7 @@ export const ActivityDialog: React.FC<ActivityDialogProps> = ({
           />
         </FormField>
         <FormField label="Frequency">
-          <select
-            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          <Select
             value={scale}
             onChange={(e) => setScale(e.target.value as any)}
           >
@@ -95,7 +95,7 @@ export const ActivityDialog: React.FC<ActivityDialogProps> = ({
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
             <option value="yearly">Yearly</option>
-          </select>
+          </Select>
         </FormField>
       </div>
 

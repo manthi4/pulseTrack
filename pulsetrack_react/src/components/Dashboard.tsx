@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DashboardHeader } from './DashboardHeader';
-import { ProgressBar } from './ProgressBar';
+import { ProgressBar } from './ui/ProgressBar';
 import { TrendChart } from './TrendChart';
 import { ActivityGrid } from './ActivityGrid';
 import { SessionList } from './SessionList';
@@ -9,7 +9,7 @@ import { PageSection } from './ui/PageSection';
 import { LogSessionDialog } from './LogSessionDialog';
 import { ActivityDialog } from './ActivityDialog';
 import { type Activity, type Session } from '../lib/db';
-import { type TimePeriod } from './TimePeriodSelector';
+import { type TimePeriod } from '../lib/dateUtils';
 import { getPeriodRange } from '../lib/dateUtils';
 import { calculateActivityStreak } from '../lib/activityUtils';
 import { Flame } from 'lucide-react';

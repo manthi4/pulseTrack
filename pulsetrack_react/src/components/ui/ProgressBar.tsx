@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
-import { type Activity, type Session } from '../lib/db';
-import { type TimePeriod } from '../lib/dateUtils';
-import { calculateActivityProgress } from '../lib/activityUtils';
-import { capitalize } from '../lib/utils';
+import { type Activity, type Session } from '../../lib/db';
+import { type TimePeriod } from '../../lib/dateUtils';
+import { calculateActivityProgress } from '../../lib/activityUtils';
+import { capitalize } from '../../lib/utils';
 
 interface ProgressBarProps {
   activity: Activity;

@@ -3,6 +3,7 @@ import { type Session, type Activity } from '../lib/db';
 import { format } from 'date-fns';
 import { Trash2, Clock, Plus, Edit, Copy } from 'lucide-react';
 import { Button } from './ui/Button';
+import { ActivityBadge } from './ui/ActivityBadge';
 
 interface SessionListProps {
   sessions: Session[];
@@ -68,19 +69,13 @@ export const SessionList: React.FC<SessionListProps> = ({
               <div className="flex flex-wrap gap-2 mt-2">
                 {session.activity_ids.map(syncId => {
                   const activity = getActivity(syncId);
-                  const color = activity?.color || '#3b82f6';
                   return (
-                    <span 
-                      key={syncId} 
-                      className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:opacity-80"
-                      style={{
-                        borderColor: `${color}40`,
-                        backgroundColor: `${color}15`,
-                        color: color,
-                      }}
-                    >
-                      {activity?.name || 'Unknown'}
-                    </span>
+                    <ActivityBadge
+                      key={syncId}
+                      name={activity?.name || 'Unknown'}
+                      color={activity?.color}
+                      size="md"
+                    />
                   );
                 })}
               </div>

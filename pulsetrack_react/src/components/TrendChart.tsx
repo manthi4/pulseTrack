@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { type Activity, type Session } from '../lib/db';
-import { Button } from './ui/Button';
 import { Card } from './ui/Card';
+import { ButtonGroup } from './ui/ButtonGroup';
 import { cn } from '../lib/utils';
 import { BarChart3, TrendingUp } from 'lucide-react';
 import { calculatePeriodGoal, normalizePeriod } from '../lib/dateUtils';
@@ -128,52 +128,32 @@ export const TrendChart: React.FC<TrendChartProps> = ({
           <h3 className="font-semibold leading-none tracking-tight text-xl">{title}</h3>
           
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex rounded-md border border-input bg-background p-0.5">
-              {(['7', '30', '90'] as DateRange[]).map((range) => (
-                <Button
-                  key={range}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDateRange(range)}
-                  className={cn('px-2 py-0.5 text-xs h-7', dateRange === range ? 'bg-primary text-primary-foreground' : 'hover:bg-accent')}
-                >
-                  {range}d
-                </Button>
-              ))}
-            </div>
+            <ButtonGroup
+              options={(['7', '30', '90'] as DateRange[]).map(range => ({ label: `${range}d`, value: range }))}
+              value={dateRange}
+              onChange={(range) => setDateRange(range as DateRange)}
+              variant="compact"
+            />
 
-            <div className="inline-flex rounded-md border border-input bg-background p-0.5">
-              {(['daily', 'weekly', 'monthly'] as AggregationType[]).map((agg) => (
-                <Button
-                  key={agg}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setAggregation(agg)}
-                  className={cn('px-2x py-0.5 text-xs h-7 capitalize', aggregation === agg ? 'bg-primary text-primary-foreground' : 'hover:bg-accent')}
-                >
-                  {agg.slice(0, 3)}
-                </Button>
-              ))}
-            </div>
+            <ButtonGroup
+              options={(['daily', 'weekly', 'monthly'] as AggregationType[]).map(agg => ({ 
+                label: agg.slice(0, 3), 
+                value: agg 
+              }))}
+              value={aggregation}
+              onChange={(agg) => setAggregation(agg as AggregationType)}
+              variant="compact"
+            />
 
-            <div className="inline-flex rounded-md border border-input bg-background p-0.5">
-               <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setChartType('line')}
-                className={cn('px-2 py-0.5 text-xs h-7', chartType === 'line' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent')}
-              >
-                <TrendingUp className="h-3 w-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setChartType('area')}
-                className={cn('px-2 py-0.5 text-xs h-7', chartType === 'area' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent')}
-              >
-                <BarChart3 className="h-3 w-3" />
-              </Button>
-            </div>
+            <ButtonGroup
+              options={[
+                { label: '', value: 'line' as ChartType, icon: <TrendingUp className="h-3 w-3" /> },
+                { label: '', value: 'area' as ChartType, icon: <BarChart3 className="h-3 w-3" /> },
+              ]}
+              value={chartType}
+              onChange={(type) => setChartType(type as ChartType)}
+              variant="compact"
+            />
           </div>
         </div>
 

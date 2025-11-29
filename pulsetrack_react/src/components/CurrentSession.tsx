@@ -4,6 +4,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 // import { Select } from './ui/Select';
 import { LogSessionDialog } from './LogSessionDialog';
+import { ActivityBadge } from './ui/ActivityBadge';
 import { type Activity } from '../lib/db';
 
 interface CurrentSessionProps {
@@ -523,25 +524,17 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
               <p className="text-muted-foreground text-sm">No activities available. Create activities in the Advanced page.</p>
             ) : (
               activities.map(activity => {
-                const color = activity.color || '#3b82f6';
                 const isSelected = activity.sync_id && selectedActivityIds.includes(activity.sync_id);
                 return (
-                  <button
+                  <ActivityBadge
                     key={activity.sync_id}
+                    name={activity.name}
+                    color={activity.color}
+                    isSelected={!!isSelected}
                     onClick={() => activity.sync_id && !isRunning && toggleActivity(activity.sync_id)}
-                    disabled={isRunning}
-                    className={`px-3 py-1.5 rounded-full text-sm border transition-all ${isSelected
-                      ? 'shadow-md'
-                      : 'hover:opacity-80'
-                      } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                    style={{
-                      backgroundColor: isSelected ? color : `${color}15`,
-                      borderColor: isSelected ? color : `${color}40`,
-                      color: isSelected ? 'white' : color,
-                    }}
-                  >
-                    {activity.name}
-                  </button>
+                    className={isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                    size="md"
+                  />
                 );
               })
             )}

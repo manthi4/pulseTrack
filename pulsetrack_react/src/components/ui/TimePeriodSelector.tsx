@@ -1,11 +1,10 @@
 import React, { useRef } from 'react';
-import { Button } from './ui/Button';
-import { Input } from './ui/Input';
-import { cn } from '../lib/utils';
+import { Button } from './Button';
+import { Input } from './Input';
+import { cn } from '../../lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths } from 'date-fns';
-
-export type TimePeriod = 'day' | 'week' | 'month';
+import { type TimePeriod } from '../../lib/dateUtils';
 
 interface TimePeriodSelectorProps {
   value: TimePeriod;
@@ -33,9 +32,11 @@ export const TimePeriodSelector: React.FC<TimePeriodSelectorProps> = ({
   };
 
   const navigatePeriod = (direction: 'prev' | 'next') => {
-    const navFn = navigateFunctions[value]?.[direction];
-    if (navFn) {
-      onDateChange(navFn(selectedDate, 1));
+    if (value === 'day' || value === 'week' || value === 'month') {
+      const navFn = navigateFunctions[value]?.[direction];
+      if (navFn) {
+        onDateChange(navFn(selectedDate, 1));
+      }
     }
   };
 
@@ -49,6 +50,7 @@ export const TimePeriodSelector: React.FC<TimePeriodSelectorProps> = ({
       day: 'MMM d, yyyy',
       month: 'MMMM yyyy',
       week: 'MMM d, yyyy', // fallback
+      year: 'yyyy',
     };
     return format(date, formats[period] || formats.day);
   };
@@ -75,6 +77,7 @@ export const TimePeriodSelector: React.FC<TimePeriodSelectorProps> = ({
       day: (d) => format(d, 'yyyy-MM-dd'),
       week: (d) => format(startOfWeek(d, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
       month: (d) => format(startOfMonth(d), 'yyyy-MM'),
+      year: (d) => format(d, 'yyyy'),
     };
     return formats[period]?.(date) || formats.day(date);
   };

@@ -2,7 +2,7 @@ import { Plus } from 'lucide-react';
 import { ActivityCard } from './ActivityCard';
 import { Card } from './ui/Card';
 import { type Activity, type Session } from '../lib/db';
-import { type TimePeriod } from './TimePeriodSelector';
+import { type TimePeriod } from '../lib/dateUtils';
 
 interface ActivityGridProps {
   activities: Activity[];

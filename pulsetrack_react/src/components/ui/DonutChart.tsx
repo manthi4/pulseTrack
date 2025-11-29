@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { type Activity, type Session } from '../lib/db';
-import { type TimePeriod } from '../lib/dateUtils';
-import { calculateActivityProgress } from '../lib/activityUtils';
-import { capitalize } from '../lib/utils';
-import { useTheme } from '../contexts/ThemeContext';
+import { type Activity, type Session } from '../../lib/db';
+import { type TimePeriod } from '../../lib/dateUtils';
+import { calculateActivityProgress } from '../../lib/activityUtils';
+import { capitalize } from '../../lib/utils';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface DonutChartProps {
   activity: Activity;
@@ -107,3 +107,4 @@ export const DonutChart: React.FC<DonutChartProps> = ({
     </div>
   );
 };
+
