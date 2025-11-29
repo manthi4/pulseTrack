@@ -263,12 +263,25 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
 
   // Handle timer completion
   const handleTimerComplete = useCallback(() => {
-    // Play sound and show notification
-    playTimerSound();
-    showTimerNotification();
+    console.log('handleTimerComplete called, sessionStartTime:', sessionStartTime);
 
+    // IMPORTANT: Set dialog state FIRST (before sound) for Chrome mobile compatibility
+    // Chrome can lose user interaction context during sound playback
     if (sessionStartTime) {
+      console.log('Setting showSaveDialog to true');
       setShowSaveDialog(true);
+
+      // Play sound AFTER setting dialog state, with a small delay to ensure dialog renders
+      // This prevents Chrome mobile from blocking the state update
+      setTimeout(() => {
+        playTimerSound();
+        showTimerNotification();
+      }, 100);
+    } else {
+      console.log('No sessionStartTime, not showing dialog');
+      // Still play sound even if no session to save
+      playTimerSound();
+      showTimerNotification();
     }
   }, [sessionStartTime, sessionName]);
 
@@ -419,9 +432,11 @@ export const CurrentSession: React.FC<CurrentSessionProps> = ({
   };
 
   const handleFinish = () => {
+    console.log('handleFinish called, sessionStartTime:', sessionStartTime);
     setIsRunning(false);
     setTimerStartTimestamp(null);
     if (sessionStartTime) {
+      console.log('Calling handleTimerComplete from handleFinish');
       handleTimerComplete();
     }
   };
