@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Pause, CheckCircle, RotateCcw, Clock, Timer } from 'lucide-react';
-import { Button } from './ui/Button';
-import { Input } from './ui/Input';
-// import { Select } from './ui/Select';
-import { LogSessionDialog } from './LogSessionDialog';
-import { ActivityBadge } from './ui/ActivityBadge';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+// import { Select } from '../components/ui/Select';
+import { LogSessionDialog } from '../components/LogSessionDialog';
+import { ActivityBadge } from '../components/ui/ActivityBadge';
 import { type Activity } from '../lib/db';
 
 interface CurrentSessionProps {

@@ -1,9 +1,9 @@
 import React from 'react';
-import { CloudSyncSection } from './CloudSyncSection';
-import { ThemeModeSection } from './settings/ThemeModeSection';
-import { AccentColorSection } from './settings/AccentColorSection';
-import { FontFamilySection } from './settings/FontFamilySection';
-import { ResetSection } from './settings/ResetSection';
+import { CloudSyncSection } from '../components/CloudSyncSection';
+import { ThemeModeSection } from '../components/settings/ThemeModeSection';
+import { AccentColorSection } from '../components/settings/AccentColorSection';
+import { FontFamilySection } from '../components/settings/FontFamilySection';
+import { ResetSection } from '../components/settings/ResetSection';
 
 export const Settings: React.FC = () => {
   return (

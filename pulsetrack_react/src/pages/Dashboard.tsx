@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { DashboardHeader } from './DashboardHeader';
-import { ProgressBar } from './ui/ProgressBar';
-import { TrendChart } from './TrendChart';
-import { ActivityGrid } from './ActivityGrid';
-import { SessionList } from './SessionList';
-import { Button } from './ui/Button';
-import { PageSection } from './ui/PageSection';
-import { LogSessionDialog } from './LogSessionDialog';
-import { ActivityDialog } from './ActivityDialog';
+import { DashboardHeader } from '../components/DashboardHeader';
+import { ProgressBar } from '../components/ui/ProgressBar';
+import { TrendChart } from '../components/TrendChart';
+import { ActivityGrid } from '../components/ActivityGrid';
+import { SessionList } from '../components/SessionList';
+import { Button } from '../components/ui/Button';
+import { PageSection } from '../components/ui/PageSection';
+import { LogSessionDialog } from '../components/LogSessionDialog';
+import { ActivityDialog } from '../components/ActivityDialog';
 import { type Activity, type Session } from '../lib/db';
 import { type TimePeriod } from '../lib/dateUtils';
 import { getPeriodRange } from '../lib/dateUtils';
@@ -253,3 +253,4 @@ export const Dashboard: React.FC<DashboardProps> = ({
     </div>
   );
 };
+

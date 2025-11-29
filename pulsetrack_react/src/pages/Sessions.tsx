@@ -2,11 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { type Session, type Activity } from '../lib/db';
 import { format } from 'date-fns';
 import { Trash2, Clock, Plus, Edit, Search, Filter, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
-import { Button } from './ui/Button';
-import { Input } from './ui/Input';
-import { Select } from './ui/Select';
-import { PageSection } from './ui/PageSection';
-import { LogSessionDialog } from './LogSessionDialog';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Select } from '../components/ui/Select';
+import { PageSection } from '../components/ui/PageSection';
+import { LogSessionDialog } from '../components/LogSessionDialog';
 import { cn } from '../lib/utils';
 
 interface SessionsProps {

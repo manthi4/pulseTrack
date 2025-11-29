@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Download, FileSpreadsheet, Upload, AlertCircle, CheckCircle, RefreshCw, LogOut } from 'lucide-react';
-import { Button } from './ui/Button';
-import { Input } from './ui/Input';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
 import { type Activity, type Session, createActivity, createSession } from '../lib/db';
 import { initGoogle, signIn, signOut } from '../lib/google';
 import { syncData } from '../lib/sync';

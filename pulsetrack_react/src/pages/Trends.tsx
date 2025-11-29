@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { TrendChart } from './TrendChart';
-import { Analytics } from './Analytics';
+import { TrendChart } from '../components/TrendChart';
+import { Analytics } from '../components/Analytics';
 import { type Activity, type Session } from '../lib/db';
 import { type DateRange, type AggregationType } from '../lib/chartUtils';
 
@@ -40,3 +40,4 @@ export const Trends: React.FC<TrendsProps> = ({ activities, sessions }) => {
     </div>
   );
 };
+
