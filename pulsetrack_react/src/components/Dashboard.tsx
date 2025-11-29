@@ -149,13 +149,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 />
                 <h2 className="text-xl sm:text-2xl font-semibold">{selectedActivity.name}</h2>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => openActivityDialog(selectedActivity)}
-                className="w-full sm:w-auto"
-              >
-                Edit Activity
-              </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  onClick={() => openActivityDialog(selectedActivity)}
+                  className="flex-1 sm:flex-none"
+                >
+                  Edit Activity
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => selectedActivity.sync_id && handleDeleteActivity(selectedActivity.sync_id)}
+                  className="flex-1 sm:flex-none"
+                >
+                  Delete
+                </Button>
+              </div>
             </div>
             <PageSection title="Progress" variant="compact">
               <ProgressBar
@@ -169,9 +178,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* Streak Display */}
             {streak && (
-              <PageSection 
-                icon={Flame} 
-                title="Streaks" 
+              <PageSection
+                icon={Flame}
+                title="Streaks"
                 iconBgColor="warning"
                 variant="compact"
               >
@@ -207,7 +216,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
             timePeriod={timePeriod}
             selectedDate={selectedDate}
             onSelectActivity={onSelectActivity}
-            onDeleteActivity={handleDeleteActivity}
             onCreateActivity={() => openActivityDialog()}
           />
         )}

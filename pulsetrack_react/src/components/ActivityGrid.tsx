@@ -1,6 +1,6 @@
-import { Plus, Trash2 } from 'lucide-react';
-import { Button } from './ui/Button';
-import { DonutChart } from './DonutChart';
+import { Plus } from 'lucide-react';
+import { ActivityCard } from './ActivityCard';
+import { Card } from './ui/Card';
 import { type Activity, type Session } from '../lib/db';
 import { type TimePeriod } from './TimePeriodSelector';
 
@@ -10,7 +10,6 @@ interface ActivityGridProps {
   timePeriod: TimePeriod;
   selectedDate: Date;
   onSelectActivity: (syncId: string) => void;
-  onDeleteActivity: (syncId: string) => void;
   onCreateActivity: () => void;
 }
 
@@ -20,51 +19,29 @@ export function ActivityGrid({
   timePeriod,
   selectedDate,
   onSelectActivity,
-  onDeleteActivity,
   onCreateActivity
 }: ActivityGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {activities.map(activity => (
-        <div 
-          key={activity.sync_id} 
-          className="rounded-xl border border-border/50 bg-card text-card-foreground shadow-lg p-4 relative group cursor-pointer hover:shadow-xl hover:shadow-primary/5 transition-all hover:border-primary/20"
-          onClick={() => activity.sync_id && onSelectActivity(activity.sync_id)}
-        >
-            <div className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
-                 <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8"
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      activity.sync_id && onDeleteActivity(activity.sync_id); 
-                    }}
-                  >
-                   <Trash2 className="h-4 w-4 text-destructive" />
-                 </Button>
-            </div>
-            <h3 className="font-semibold text-center mb-2">{activity.name}</h3>
-            <div className="h-48">
-                 <DonutChart 
-                   activity={activity} 
-                   sessions={sessions} 
-                   timePeriod={timePeriod} 
-                   selectedDate={selectedDate}
-                   showPeriodLabel={false} 
-                 />
-            </div>
-        </div>
+        <ActivityCard
+          key={activity.sync_id}
+          activity={activity}
+          sessions={sessions}
+          timePeriod={timePeriod}
+          selectedDate={selectedDate}
+          onSelectActivity={onSelectActivity}
+        />
       ))}
-      
-      <div 
-        className="rounded-xl border-2 border-dashed border-muted hover:border-primary bg-card/50 text-muted-foreground hover:text-primary shadow-sm hover:shadow-md hover:shadow-primary/10 p-4 flex flex-col items-center justify-center cursor-pointer transition-all h-[260px]"
+
+      <Card
+        padding="sm"
+        className="border-2 border-dashed border-muted hover:border-primary bg-card/50 text-muted-foreground hover:text-primary flex flex-col items-center justify-center cursor-pointer h-[260px]"
         onClick={onCreateActivity}
       >
-         <Plus className="h-12 w-12 mb-2" />
-         <span className="font-medium">Create Activity</span>
-      </div>
+        <Plus className="h-12 w-12 mb-2" />
+        <span className="font-medium">Create Activity</span>
+      </Card>
     </div>
   );
 }
-
